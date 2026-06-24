@@ -1,0 +1,367 @@
+Scene_001
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A bored modern stickman lies on a couch holding a glowing phone, surrounded by empty space, looking emotionally dead despite having entertainment.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_002
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A huge cloud of simple entertainment icons floats above a stickman: small play button, game controller, music note, movie clapper, meme face, podcast microphone, notification bell. This is one of the only combined list images.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_003
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A modern stickman stares at a giant play button icon on a floating screen, bored expression, one eyebrow raised.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_004
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A modern stickman holds a simple game controller, but his face looks bored instead of excited.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_005
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A modern stickman wears big headphones while a large music note floats beside him, still looking bored.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_006
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A modern stickman sits in front of a simple movie clapperboard icon, blank face, popcorn untouched.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_007
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A modern stickman looks at a goofy meme face on a paper-like screen, but he is not laughing.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_008
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A modern stickman listens to a podcast microphone icon, eyes half-open, bored and tired.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_009
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A modern stickman is buried under many notification bubbles and tiny bells, looking overwhelmed and bored.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_010
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A stickman scrolls an extremely long vertical phone feed that goes off the bottom of the frame like an endless paper strip.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_011
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A modern stickman holds a huge phone portal showing hundreds of tiny frames, while a tiny ancient stickman beside him looks shocked.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_012
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A stickman finger presses a skip button on a simple music player, bored face.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_013
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A stickman closes a video window with a big X button, still unsatisfied.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_014
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A stickman video-calls a tiny face on a phone, but both look bored and disconnected.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_015
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A close-up of a stickman head with a tiny bored brain inside whispering with a speech bubble that says I'M BORED in simple hand-drawn text.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_016
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A giant hand-drawn text card saying I'M BORED, with a tiny bored stickman lying under the words.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_017
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A simple ancient camp scene with one ancient stickman standing empty-handed, no screen, no devices, only dirt ground and sky.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_018
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A close-up of an empty ancient stickman hand where a phone would be, with a confused face looking at the empty palm.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_019
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A tiny funny algorithm demon made of simple black doodle lines sits inside a phone, holding a magnifying glass and studying a stickman brain.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_020
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A modern stickman lies in bed at 2 a.m. with a phone, while his brain is drawn as a melting bowl of soup.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_021
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A plain empty scene where a stickman sits in silence and nothing happens, with huge empty white space around him.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_022
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A thinking stickman stands between a modern phone world and an ancient fire world, asking with a big question mark which side is less bored.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_023
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An ancient stickman shivers near a small fire in a dangerous open landscape, showing ancient life was not easy.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_024
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A simple signpost labeled MEANING points toward a campfire, food, tools, and people, while a bored modern stickman watches from far away.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_025
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An ancient stickman wakes up and the whole environment seems to point at him with simple arrows, as if reality is asking him to pay attention.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_026
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: Close-up of a broken branch on the ground, with an ancient stickman crouching and noticing it carefully.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_027
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An ancient stickman feels wind on his face while holding a spear, with simple arrows showing wind direction changing the hunt.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_028
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: Close-up of a footprint in mud, drawn very simply, with a stickman magnifying glass nearby.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_029
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An ancient stickman studies a footprint and imagines a simple animal outline above it, wondering what made it.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_030
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A footprint with three fading versions behind it, showing the ancient stickman estimating how long ago it was made.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_031
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An ancient stickman looks at one footprint and then at several smaller footprints, comparing whether the animal was alone or in a group.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_032
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A trail of footprints leads into a simple forest, with an ancient stickman pointing in the direction the animal went.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_033
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A modern stickman looks at a forest like it is boring scenery, arms relaxed, blank expression.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_034
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An ancient stickman looks at the same forest filled with simple clue icons: footprint, branch, berry, smoke, water drop, animal eye.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_035
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A giant forest message board made of trees and leaves shows simple clue symbols, while a tiny ancient stickman reads it.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_036
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: The forest message board suddenly has cartoon teeth, joking that the message board can eat you.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_037
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A predator eye appears like a notification bubble in a dark forest, while an ancient stickman reacts instantly.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_038
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A modern stickman sits in a plain room, bored, while the walls look completely uninterested in him.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_039
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A modern stickman stares at a plain ceiling with no clues, no mystery, just empty white space.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_040
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A phone floats in front of a stickman and pours colorful content rectangles into his eyes without making him move.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_041
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A close-up of a stickman thumb scrolling on a phone, with the stickman's face bored in the background.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_042
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A stickman sits still watching a screen, eyes open but body completely frozen.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_043
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A stickman finger taps a phone button again and again, expression flat.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_044
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A stickman consumes content like a conveyor belt of small screens entering his head.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_045
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A stickman brain is drawn with labels as simple icons for search, notice, predict, move, remember, solve, arranged around it. This is a combined concept image.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_046
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An ancient stickman searches the ground carefully with a focused face.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_047
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An ancient stickman notices a tiny detail on a leaf, with a small arrow pointing to it.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_048
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An ancient stickman predicts where an animal will go using dotted arrows in the dirt.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_049
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An ancient stickman moves through a landscape, stepping over rocks with alert body language.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_050
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An ancient stickman remembers a path, with a simple thought bubble showing the same route from yesterday.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_051
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An ancient stickman solves a practical problem by placing stones around a fire.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_052
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An ancient stickman looks fully present and focused beside a campfire, while the background is calm and simple.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_053
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A stone toolmaking scene: an ancient stickman holds one stone and strikes another stone carefully.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_054
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A wrong strike breaks a stone into useless gravel pieces, and the ancient stickman looks annoyed.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_055
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An ancient stickman prepares food carefully on a flat stone, focused and serious.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_056
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A suspicious berry sits in the center with an ancient stickman looking at it nervously, unsure if it is safe.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_057
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A funny calendar page falls over beside a dangerous berry, showing the joke that the wrong berry can ruin the rest of your calendar.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_058
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An ancient stickman gently adds wood to a small fire, protecting it from going out.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_059
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A stickman warms hands near a fire, with simple orange glow and blue night background.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_060
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A fire sits between an ancient stickman and two simple animal eyes in the darkness, showing protection.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_061
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An ancient stickman cooks a piece of food over a fire with a simple stick.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_062
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A fire lights up a dark scene, with a stickman face visible in the glow.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_063
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A campfire forms a glowing orange circle around a small group, with dark outside world beyond it.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_064
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A slow quiet ancient moment: a stickman sits near a fire, relaxed but not empty, watching sparks.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_065
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A modern stickman sits on a couch with a phone showing 4% battery and a crossed-out Wi-Fi icon, looking miserable.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_066
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A group of simple stickmen sit around a fire talking, one person gesturing with hands.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_067
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A stickman around the fire tells a joke and other stickmen laugh with open mouths.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_068
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An older stickman teaches a child stickman how to hold a small tool near the fire.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_069
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: One ancient stickman shares food with another, both smiling slightly.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_070
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An ancient stickman lies badly about food, with shifty eyes and a tiny hidden snack behind his back.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_071
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An ancient helper stickman supports another stickman carrying wood.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_072
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A stickman holds the important spear upside down while everyone else looks worried.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_073
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A social survival scene: a group of stickmen connected by simple lines like a safety net.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_074
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A group of ancient stickmen form a protective circle around a smaller stickman, showing the group as the safety net.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_075
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A simple empty hospital icon with a red X over it, and an ancient stickman looking worried.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_076
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A simple police badge icon with a red X over it, and ancient stickmen relying on each other instead.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_077
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A simple insurance document icon with a red X over it, drawn like a basic doodle paper.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_078
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A lonely ancient stickman stands on one side, while a group of people stands on the other, showing there were only people.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_079
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: Two ancient stickmen shake hands beside a fire, with a small shield icon above them showing trust.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_080
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: Two stickmen in conversation with speech bubbles, sitting near a fire.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_081
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A storyteller stickman dramatically tells a story while simple pictures float above: animal, storm, path, fire.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_082
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: Two stickmen gossip quietly with wide eyes, while a third stickman in the distance looks suspicious.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_083
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A teacher stickman points at a chalkboard saying NO GOSSIP, while ancient stickmen secretly whisper behind him.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_084
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A funny branding scene: a gossip speech bubble gets a shiny label that says SOCIAL INFO in simple hand-drawn text.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_085
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An ancient stickman gives food to another, with a small label-like symbol of reliability above him.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_086
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A selfish stickman hides food behind a rock while others look away.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_087
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: An excited stickman points to a water source, while the group looks relieved.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_088
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A stickman acts weird near the food pile, with everyone else staring suspiciously.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_089
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A lively ancient camp filled with small conversations, laughter, food sharing, and children playing.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_090
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: One stickman appears as a storybook, with pages opening from his body showing tiny memories.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_091
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: Two stickmen are connected by a thick rope labeled trust using simple icon style, not realistic text-heavy.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
+
+Scene_092
+Prompt: Create a simple 2D MS Paint style stickman explainer drawing. Very basic hand-drawn look, thick black outlines, round white stickman faces, simple black stick bodies, flat colors, rough imperfect lines, minimal background, clean readable composition, 16:9 frame. Use simple shapes like a school notebook doodle. No realism, no 3D, no photorealism, no complex texture, no cinematic lighting. Scene: A modern stickman sits alone in a dark room surrounded by many floating screen faces.
+Angle/settings: Simple flat composition, basic paint-drawing style, minimal details, clear focal point, mostly white or flat blue/brown background, no extra text unless explicitly requested.
