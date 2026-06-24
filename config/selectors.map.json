@@ -1,0 +1,502 @@
+{
+  "_description": "UI selectors map for Google Flow. Discovered via flow_discover_ui. Update when Flow UI changes.",
+  "_lastUpdated": "2026-06-24T20:15:32.006Z",
+  "main": {
+    "url": "https://labs.google/fx/tools/flow",
+    "title": "Flow",
+    "discoveredAt": "2026-05-31T03:01:18.043Z",
+    "selectors": {
+      "buttons": [
+        {
+          "text": "help_outlinedCentre d'aide FlowCentre d'aide Flow",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "more_vert",
+          "visible": true,
+          "tag": "I",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "PRO",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "closeFermerFermer",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "Try Omni now",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "Accéder à la bannière 1",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": "Accéder à la bannière 1",
+          "dataTestId": null
+        },
+        {
+          "text": "Accéder à la bannière 2",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": "Accéder à la bannière 2",
+          "dataTestId": null
+        },
+        {
+          "text": "Accéder à la bannière 3",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": "Accéder à la bannière 3",
+          "dataTestId": null
+        },
+        {
+          "text": "Accéder à la bannière 4",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": "Accéder à la bannière 4",
+          "dataTestId": null
+        },
+        {
+          "text": "Accéder à la bannière 5",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": "Accéder à la bannière 5",
+          "dataTestId": null
+        },
+        {
+          "text": "Accéder à la bannière 6",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": "Accéder à la bannière 6",
+          "dataTestId": null
+        },
+        {
+          "text": "editModifier le projet",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "deleteSupprimer le projet",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "editModifier le projet",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "deleteSupprimer le projet",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "editModifier le projet",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "deleteSupprimer le projet",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "add_2Nouveau projet",
+          "visible": false,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        }
+      ],
+      "inputs": [
+        {
+          "placeholder": "",
+          "ariaLabel": "",
+          "name": "g-recaptcha-response",
+          "type": "TEXTAREA",
+          "visible": false
+        }
+      ],
+      "links": [
+        {
+          "text": "Flow",
+          "href": "/fx/fr/tools/flow",
+          "visible": true
+        },
+        {
+          "text": "tvFlow TV",
+          "href": "https://labs.google/flow/tv",
+          "visible": true
+        }
+      ],
+      "headings": [
+        {
+          "level": "H2",
+          "text": "Introducing Gemini Omni Flash"
+        }
+      ],
+      "modelTexts": [
+        "For a limited time, explore Gemini Omni Flash for 50% fewer credits. Ends 6/1.",
+        "Introducing Gemini Omni Flash",
+        "Try Omni now"
+      ],
+      "ratioTexts": [
+        "Cinematic realism, powerful editing, world knowledge: try our latest video generation model! For a limited time, explore the new model for 50% fewer credits. Ends 6/1.",
+        "31 mai, 04:58",
+        "31 mai, 04:45",
+        "31 mai, 04:44"
+      ]
+    }
+  },
+  "imageGeneration": {
+    "selectors": {}
+  },
+  "videoGeneration": {
+    "selectors": {}
+  },
+  "characters": {
+    "url": "https://labs.google/fx/tools/flow/project/3d40e080-394e-487f-a0b8-1ea5e0a2a11b/characters",
+    "title": "Google Flow - Jun 25, 12:14 AM",
+    "discoveredAt": "2026-06-24T20:15:32.005Z",
+    "selectors": {
+      "buttons": [
+        {
+          "text": "arrow_backBack",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "The EccentricUnforgettable quirky humans. Magnetic scene-stealers with offbeat c",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "The ProfessionalClean cut, well spoken, competent",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "The WildcardBeyond human, anything can be a character, right?",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "The FamiliarGrounded and authentic, a relatable anchor for your story",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "The WickedPowerful antagonistic figures that command the screen",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "The FantasticalEthereal, dreamlike beings fusing the human and the mythical",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "add_2Create",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "personal_recommendationsFormat",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "🍌 Nano Banana 2arrow_drop_down",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "arrow_forwardCreate",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "uploadUpload",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "addAdd from Project",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        }
+      ],
+      "inputs": [
+        {
+          "placeholder": "",
+          "ariaLabel": "",
+          "name": "",
+          "type": "DIV",
+          "visible": true
+        },
+        {
+          "placeholder": "",
+          "ariaLabel": "",
+          "name": "",
+          "type": "file",
+          "visible": false
+        },
+        {
+          "placeholder": "",
+          "ariaLabel": "",
+          "name": "g-recaptcha-response",
+          "type": "TEXTAREA",
+          "visible": false
+        }
+      ],
+      "links": [],
+      "headings": [
+        {
+          "level": "H1",
+          "text": "Build and reuse characters for consistent videos.Use a sample prompt below, or c"
+        }
+      ],
+      "modelTexts": [
+        "🍌 Nano Banana 2"
+      ],
+      "ratioTexts": []
+    }
+  },
+  "scenes": {
+    "url": null,
+    "selectors": {}
+  },
+  "toolsGallery": {
+    "url": null,
+    "selectors": {}
+  },
+  "gridArchitect": {
+    "url": null,
+    "selectors": {}
+  },
+  "image-generation": {
+    "url": "https://labs.google/fx/tools/flow",
+    "title": "Flow",
+    "discoveredAt": "2026-05-30T04:10:01.462Z",
+    "selectors": {
+      "buttons": [
+        {
+          "text": "help_outlinedCentre d'aide FlowCentre d'aide Flow",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "more_vert",
+          "visible": true,
+          "tag": "I",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "PRO",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "closeFermerFermer",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "Try Omni now",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "Accéder à la bannière 1",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": "Accéder à la bannière 1",
+          "dataTestId": null
+        },
+        {
+          "text": "Accéder à la bannière 2",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": "Accéder à la bannière 2",
+          "dataTestId": null
+        },
+        {
+          "text": "Accéder à la bannière 3",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": "Accéder à la bannière 3",
+          "dataTestId": null
+        },
+        {
+          "text": "Accéder à la bannière 4",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": "Accéder à la bannière 4",
+          "dataTestId": null
+        },
+        {
+          "text": "Accéder à la bannière 5",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": "Accéder à la bannière 5",
+          "dataTestId": null
+        },
+        {
+          "text": "Accéder à la bannière 6",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": "Accéder à la bannière 6",
+          "dataTestId": null
+        },
+        {
+          "text": "editModifier le projet",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "deleteSupprimer le projet",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "editModifier le projet",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "deleteSupprimer le projet",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "editModifier le projet",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "deleteSupprimer le projet",
+          "visible": true,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        },
+        {
+          "text": "add_2Nouveau projet",
+          "visible": false,
+          "tag": "BUTTON",
+          "ariaLabel": null,
+          "dataTestId": null
+        }
+      ],
+      "inputs": [
+        {
+          "placeholder": "",
+          "ariaLabel": "",
+          "name": "g-recaptcha-response",
+          "type": "TEXTAREA",
+          "visible": false
+        }
+      ],
+      "links": [
+        {
+          "text": "Flow",
+          "href": "/fx/fr/tools/flow",
+          "visible": true
+        },
+        {
+          "text": "tvFlow TV",
+          "href": "https://labs.google/flow/tv",
+          "visible": true
+        }
+      ],
+      "headings": [
+        {
+          "level": "H2",
+          "text": "Introducing Gemini Omni Flash"
+        }
+      ],
+      "modelTexts": [
+        "For a limited time, explore Gemini Omni Flash for 50% fewer credits. Ends 6/1.",
+        "Introducing Gemini Omni Flash",
+        "Try Omni now"
+      ],
+      "ratioTexts": [
+        "Cinematic realism, powerful editing, world knowledge: try our latest video generation model! For a limited time, explore the new model for 50% fewer credits. Ends 6/1.",
+        "30 mai, 06:09",
+        "30 mai, 06:08",
+        "30 mai, 06:04"
+      ]
+    }
+  }
+}
