@@ -1,5 +1,6 @@
 import { logger } from '../utils/logger.js';
 import { takeScreenshot } from '../utils/screenshots.js';
+import { typeLikeHuman } from '../browser/safe-actions.js';
 
 /**
  * After a character is created, Flow navigates to
@@ -55,7 +56,7 @@ export async function renameCharacterTitle(page, newName) {
 
       await page.keyboard.press('Control+a');
       await page.waitForTimeout(100);
-      await page.keyboard.type(newName, { delay: 30 });
+      await typeLikeHuman(page.keyboard, newName);
       await page.keyboard.press('Enter');
       await page.waitForTimeout(600);
 

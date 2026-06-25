@@ -90,7 +90,8 @@ $chromeArgs = @(
     '--disable-sync',
     '--disable-features=ChromeWhatsNewUI',
     '--disable-background-networking',
-    '--disable-component-update'
+    '--disable-component-update',
+    '--disable-blink-features=AutomationControlled'
 )
 
 Start-Process -FilePath $ChromePath -ArgumentList $chromeArgs

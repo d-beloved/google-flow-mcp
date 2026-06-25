@@ -4,7 +4,7 @@ import { jobQueue } from '../queue/job-queue.js';
 import { takeScreenshot } from '../utils/screenshots.js';
 import { FlowError, ErrorCodes } from '../utils/errors.js';
 import { get } from '../utils/config.js';
-import { detectPageElements } from '../browser/safe-actions.js';
+import { detectPageElements, typeLikeHuman } from '../browser/safe-actions.js';
 import { saveMetadata } from '../utils/file-manager.js';
 import { ensureProjectInContext, navigateToSidebar } from '../navigation/project-navigator.js';
 import { renameCharacterTitle } from '../navigation/character-rename.js';
@@ -86,7 +86,7 @@ export async function handleCreateCharacter(args) {
       await descLocator.click();
       try { await descLocator.fill(''); } catch { /* ignore if contenteditable */ }
       await page.waitForTimeout(100);
-      await descLocator.type(args.description, { delay: 20 });
+      await typeLikeHuman(descLocator, args.description);
     } else {
       logger.warn('Could not find character description input');
     }

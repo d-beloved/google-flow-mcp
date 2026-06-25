@@ -1,7 +1,7 @@
 import { logger } from '../utils/logger.js';
 import { getPage } from '../browser/connect.js';
 import { takeScreenshot } from '../utils/screenshots.js';
-import { detectPageElements } from '../browser/safe-actions.js';
+import { detectPageElements, typeLikeHuman } from '../browser/safe-actions.js';
 import { saveMetadata } from '../utils/file-manager.js';
 import { ensureProjectInContext, navigateToSidebar } from '../navigation/project-navigator.js';
 import { insertMentionReferences } from '../navigation/mentions.js';
@@ -50,7 +50,7 @@ export async function handleCreateScene(args) {
         await inputLocator.click();
         await inputLocator.fill('');
         await page.waitForTimeout(200);
-        await inputLocator.type(args.description, { delay: 20 });
+        await typeLikeHuman(inputLocator, args.description);
 
         // Insert "@" references for any characters to include in the scene.
         // Flow opens a popup when "@" is typed, listing project images and characters.

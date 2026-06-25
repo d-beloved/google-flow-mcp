@@ -208,9 +208,10 @@ async function main() {
       fs.writeFileSync(progressPath, JSON.stringify(progress, null, 2));
     }
 
-    // Wait a short throttle delay between prompts
-    console.log('Throttling: waiting 5 seconds before next scene...');
-    await delay(5000);
+    // Random delay between 20,000ms and 45,000ms to avoid bot detection rate limits
+    const throttleMs = Math.floor(Math.random() * (45000 - 20000 + 1)) + 20000;
+    console.log(`Throttling: waiting ${(throttleMs / 1000).toFixed(1)} seconds before next scene...`);
+    await delay(throttleMs);
   }
 
   console.log('\n==================================================');

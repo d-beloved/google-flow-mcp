@@ -90,8 +90,10 @@ async function main() {
         fs.writeFileSync(resultsJsonPath, JSON.stringify(results, null, 2));
       }
 
-      console.log('Throttling: waiting 5 seconds...');
-      await new Promise(r => setTimeout(r, 5000));
+      // Random delay between 20,000ms and 45,000ms to avoid bot detection rate limits
+      const throttleMs = Math.floor(Math.random() * (45000 - 20000 + 1)) + 20000;
+      console.log(`Throttling: waiting ${(throttleMs / 1000).toFixed(1)} seconds to avoid rate limits...`);
+      await new Promise(r => setTimeout(r, throttleMs));
     }
 
     console.log('\n==================================================');

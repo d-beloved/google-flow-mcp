@@ -7,7 +7,7 @@ import { saveMetadata } from '../utils/file-manager.js';
 import { ensureProjectInContext } from '../navigation/project-navigator.js';
 import { insertMentionReferences } from '../navigation/mentions.js';
 import { get } from '../utils/config.js';
-import { configureGenerationUI } from '../browser/safe-actions.js';
+import { configureGenerationUI, typeLikeHuman } from '../browser/safe-actions.js';
 
 function selectModel(requested) {
   const available = get('imageModels', {});
@@ -168,7 +168,7 @@ export async function handleGenerateImage(args) {
     await page.keyboard.press('Control+a');
     await page.keyboard.press('Backspace');
     await page.waitForTimeout(200);
-    await page.keyboard.type(args.prompt, { delay: 10 });
+    await typeLikeHuman(page.keyboard, args.prompt);
     logger.info('Prompt filled', { promptLength: args.prompt.length });
     await page.waitForTimeout(200);
 

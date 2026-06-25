@@ -4,7 +4,7 @@ import { logger } from '../utils/logger.js';
 import { getPage } from '../browser/connect.js';
 import { jobQueue } from '../queue/job-queue.js';
 import { takeScreenshot } from '../utils/screenshots.js';
-import { detectPageElements } from '../browser/safe-actions.js';
+import { detectPageElements, typeLikeHuman } from '../browser/safe-actions.js';
 import { FlowError, ErrorCodes } from '../utils/errors.js';
 import { ensureProjectInContext, extractProjectId, buildProjectUrl } from '../navigation/project-navigator.js';
 
@@ -78,7 +78,7 @@ export async function handleImportCharacter(args) {
       await nameInput.click();
       await nameInput.fill('');
       await page.waitForTimeout(200);
-      await nameInput.type(characterName, { delay: 20 });
+      await typeLikeHuman(nameInput, characterName);
     }
   }
 
@@ -93,7 +93,7 @@ export async function handleImportCharacter(args) {
       await descInput.click();
       await descInput.fill('');
       await page.waitForTimeout(200);
-      await descInput.type(description, { delay: 20 });
+      await typeLikeHuman(descInput, description);
     }
   }
 

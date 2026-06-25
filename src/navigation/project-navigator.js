@@ -2,7 +2,7 @@ import { logger } from '../utils/logger.js';
 import { getPage } from '../browser/connect.js';
 import { get } from '../utils/config.js';
 import { takeScreenshot } from '../utils/screenshots.js';
-import { detectPageElements } from '../browser/safe-actions.js';
+import { detectPageElements, typeLikeHuman } from '../browser/safe-actions.js';
 import { FlowError, ErrorCodes } from '../utils/errors.js';
 import fs from 'fs';
 import path from 'path';
@@ -146,7 +146,7 @@ export async function renameCurrentProject(page, newName) {
         await input.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
         if (await input.isVisible().catch(() => false)) {
           await page.keyboard.press('Control+a');
-          await page.keyboard.type(newName, { delay: 30 });
+          await typeLikeHuman(page.keyboard, newName);
           await page.keyboard.press('Enter');
           await input.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {});
           logger.info('Project renamed via ⋮ menu', { newName });
@@ -189,7 +189,7 @@ export async function renameCurrentProject(page, newName) {
 
       await page.keyboard.press('Control+a');
       await page.waitForTimeout(50);
-      await page.keyboard.type(newName, { delay: 30 });
+      await typeLikeHuman(page.keyboard, newName);
       await page.keyboard.press('Enter');
       
       // Allow slight settle time

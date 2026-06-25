@@ -3,7 +3,7 @@ import { getPage } from '../browser/connect.js';
 import { jobQueue } from '../queue/job-queue.js';
 import { FlowError, ErrorCodes } from '../utils/errors.js';
 import { takeScreenshot } from '../utils/screenshots.js';
-import { detectPageElements, configureGenerationUI } from '../browser/safe-actions.js';
+import { detectPageElements, configureGenerationUI, typeLikeHuman } from '../browser/safe-actions.js';
 import { prepareDownload, findNewFiles, saveMetadata } from '../utils/file-manager.js';
 import { ensureProjectInContext, navigateToSidebar } from '../navigation/project-navigator.js';
 import { insertMentionReferences } from '../navigation/mentions.js';
@@ -133,7 +133,7 @@ export async function handleGenerateVideo(args) {
     await page.keyboard.press('Control+a');
     await page.keyboard.press('Backspace');
     await page.waitForTimeout(200);
-    await page.keyboard.type(args.prompt, { delay: 10 });
+    await typeLikeHuman(page.keyboard, args.prompt);
     await page.waitForTimeout(200);
 
     // Insert "@" references for any images/characters/scenes to use as ingredients.

@@ -14,7 +14,7 @@
   "maxPollAttempts": 120,
   "downloadWaitMs": 30000,
   "browserMode": "direct-cdp",
-  "headless": true,
+  "headless": false,
   "imageModels": {
     "Nano Banana Pro": "nano-banana-pro",
     "Nano Banana 2": "nano-banana-2",

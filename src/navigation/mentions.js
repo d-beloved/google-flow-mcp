@@ -1,5 +1,6 @@
 import { logger } from '../utils/logger.js';
 import { takeScreenshot } from '../utils/screenshots.js';
+import { typeLikeHuman } from '../browser/safe-actions.js';
 
 // Typing "@" in a Flow prompt opens a large asset-picker PANEL — not a small
 // inline dropdown. The panel has:
@@ -66,7 +67,7 @@ async function findVisible(page, selectors) {
 export async function openMentionPopup(page, inputLocator) {
   await inputLocator.click();
   await page.keyboard.press('End');
-  await page.keyboard.type('@', { delay: 30 });
+  await typeLikeHuman(page.keyboard, '@');
 
   // Wait for the popup search input or add button to become visible
   const searchInputLocator = page.locator(SEARCH_INPUT_SELECTORS.join(', ')).first();
@@ -151,7 +152,7 @@ export async function insertMentionReference(page, inputLocator, name) {
   if (popup.searchInput) {
     await popup.searchInput.click();
     await popup.searchInput.fill('');
-    await popup.searchInput.type(name, { delay: 30 });
+    await typeLikeHuman(popup.searchInput, name);
     
     // Wait for filtered items to load
     const firstResult = page.locator(RESULT_ITEM_SELECTORS.join(', ')).first();

@@ -10,6 +10,75 @@ async function delay(ms) {
 }
 
 /**
+ * Checks the page for reCAPTCHA or Unusual Traffic notices and pauses execution
+ * until resolved by manual user interaction.
+ */
+export async function checkForCaptcha(page) {
+  if (!page) {
+    page = getPage();
+  }
+  if (!page) return;
+
+  const isSorryPage = page.url().includes('google.com/sorry');
+  const hasCaptcha = await page.evaluate(() => {
+    if (document.querySelector('iframe[src*="recaptcha"]')) return true;
+    if (document.querySelector('#recaptcha')) return true;
+    if (document.querySelector('.g-recaptcha')) return true;
+    const pageText = document.body ? document.body.innerText : '';
+    if (pageText.includes('unusual traffic') || pageText.includes('detected unusual traffic')) return true;
+    return false;
+  }).catch(() => false);
+
+  if (isSorryPage || hasCaptcha) {
+    logger.warn('CAPTCHA or bot detection page detected! Pausing execution.');
+    console.log('\n======================================================');
+    console.log('⚠️  CAPTCHA OR BOT DETECTION DETECTED!');
+    console.log('Please check the browser window and solve the CAPTCHA manually.');
+    console.log('The script will resume automatically once solved.');
+    console.log('======================================================\n');
+
+    let attempts = 0;
+    const maxAttempts = 60; // 5 minutes
+    while (attempts < maxAttempts) {
+      await delay(5000);
+      const stillSorry = page.url().includes('google.com/sorry');
+      const stillHasCaptcha = await page.evaluate(() => {
+        if (document.querySelector('iframe[src*="recaptcha"]')) return true;
+        if (document.querySelector('#recaptcha')) return true;
+        if (document.querySelector('.g-recaptcha')) return true;
+        const pageText = document.body ? document.body.innerText : '';
+        if (pageText.includes('unusual traffic') || pageText.includes('detected unusual traffic')) return true;
+        return false;
+      }).catch(() => false);
+
+      if (!stillSorry && !stillHasCaptcha) {
+        logger.info('CAPTCHA solved or cleared! Resuming execution.');
+        return;
+      }
+      attempts++;
+      if (attempts % 6 === 0) {
+        logger.warn(`Still waiting for CAPTCHA to be solved (${attempts * 5} seconds passed)...`);
+      }
+    }
+    throw new Error('CAPTCHA was not solved within 5 minutes. Aborting operation.');
+  }
+}
+
+/**
+ * Types text characters one by one with randomized delays to mimic human typing.
+ * @param {any} elementOrKeyboard - Playwright locator, element handle, or page.keyboard
+ * @param {string} text
+ */
+export async function typeLikeHuman(elementOrKeyboard, text) {
+  for (const char of text) {
+    // Random delay between 40ms and 120ms to simulate human speed and variance
+    const delayMs = Math.floor(Math.random() * (120 - 40 + 1)) + 40;
+    await elementOrKeyboard.type(char);
+    await delay(delayMs);
+  }
+}
+
+/**
  * Safe click with pre- and post-delay
  */
 export async function safeClick(selector, options = {}) {
@@ -18,6 +87,7 @@ export async function safeClick(selector, options = {}) {
   const preDelay = options.preDelay || ACTION_DELAY;
   const postDelay = options.postDelay || ACTION_DELAY;
 
+  await checkForCaptcha(page);
   await delay(preDelay);
   const element = await page.waitForSelector(selector, { timeout, state: 'visible' });
   if (!element) {
@@ -37,6 +107,7 @@ export async function safeFill(selector, text, options = {}) {
   const preDelay = options.preDelay || ACTION_DELAY;
   const postDelay = options.postDelay || ACTION_DELAY;
 
+  await checkForCaptcha(page);
   await delay(preDelay);
   const element = await page.waitForSelector(selector, { timeout, state: 'visible' });
   if (!element) {
@@ -45,7 +116,7 @@ export async function safeFill(selector, text, options = {}) {
   await element.click();
   await element.fill('');
   await delay(200);
-  await element.type(text, { delay: 30 });
+  await typeLikeHuman(element, text);
   await delay(postDelay);
   logger.debug('Filled input', { selector, textLength: text.length });
 }
@@ -56,6 +127,7 @@ export async function safeFill(selector, text, options = {}) {
 export async function safePress(key, options = {}) {
   const page = getPage();
   const preDelay = options.preDelay || ACTION_DELAY;
+  await checkForCaptcha(page);
   await delay(preDelay);
   await page.keyboard.press(key);
   await delay(ACTION_DELAY);
@@ -88,6 +160,7 @@ export async function safeGoto(url, options = {}) {
   await delay(preDelay);
   logger.info('Navigating', { url: url.substring(0, 80) });
   await page.goto(url, { waitUntil: 'networkidle', timeout });
+  await checkForCaptcha(page);
   await delay(ACTION_DELAY);
 }
 

@@ -104,6 +104,7 @@ log "Profile: $PROFILE"
   --disable-background-networking \
   --disable-component-update \
   --disable-sync-preferences \
+  --disable-blink-features=AutomationControlled \
   &
 
 CHROME_PID=$!
