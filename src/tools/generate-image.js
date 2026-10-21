@@ -190,7 +190,10 @@ export async function handleGenerateImage(args) {
 
     // Insert "@" references for any existing images/characters to use as ingredients.
     // Flow opens a popup when "@" is typed, listing project images and characters.
-    const mentionNames = Array.isArray(args.ingredients) ? args.ingredients : [];
+    // Media ids (uuid or "thumb:...") in ingredients are attached via the tile menu.
+    const isMediaId = s => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s) || /^thumb:/.test(s);
+    const mediaIdIngredients = (Array.isArray(args.ingredients) ? args.ingredients : []).filter(isMediaId);
+    const mentionNames = Array.isArray(args.ingredients) ? args.ingredients.filter(s => !isMediaId(s)) : [];
     let mentionResults = { inserted: [], failed: [] };
     if (mentionNames.length > 0) {
       mentionResults = await insertMentionReferences(page, promptInput, mentionNames);
@@ -204,7 +207,11 @@ export async function handleGenerateImage(args) {
 
     const refsAttached = [];
     const refsFailed = [];
-    for (const ref of (Array.isArray(args.reference_media) ? args.reference_media : [])) {
+    const referenceMedia = [
+      ...(Array.isArray(args.reference_media) ? args.reference_media : []),
+      ...mediaIdIngredients,
+    ];
+    for (const ref of referenceMedia) {
       ((await addMediaToPrompt(page, ref)) ? refsAttached : refsFailed).push(ref);
     }
     if (refsFailed.length) logger.warn('Some reference_media could not be attached', { refsFailed });

@@ -79,8 +79,11 @@ export async function handleGenerateVideo(args) {
     await page.keyboard.press('Backspace');
     await typeLikeHuman(page.keyboard, args.prompt);
 
+    // Media ids (uuid or "thumb:...") in ingredients are attached via the tile menu.
+    const isMediaId = s => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s) || /^thumb:/.test(s);
+    const mediaIdIngredients = (Array.isArray(args.ingredients) ? args.ingredients : []).filter(isMediaId);
     const mentionNames = [
-      ...(Array.isArray(args.ingredients) ? args.ingredients : []),
+      ...(Array.isArray(args.ingredients) ? args.ingredients.filter(s => !isMediaId(s)) : []),
       ...(args.use_character ? [args.use_character] : []),
       ...(args.use_scene ? [args.use_scene] : []),
     ];
@@ -89,7 +92,11 @@ export async function handleGenerateVideo(args) {
 
     const refsAttached = [];
     const refsFailed = [];
-    for (const ref of (Array.isArray(args.reference_media) ? args.reference_media : [])) {
+    const referenceMedia = [
+      ...(Array.isArray(args.reference_media) ? args.reference_media : []),
+      ...mediaIdIngredients,
+    ];
+    for (const ref of referenceMedia) {
       ((await addMediaToPrompt(page, ref)) ? refsAttached : refsFailed).push(ref);
     }
     if (refsFailed.length) logger.warn('Some reference_media could not be attached', { refsFailed });

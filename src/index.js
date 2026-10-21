@@ -90,7 +90,7 @@ const TOOL_DEFINITIONS = [
         download: { type: 'string', description: 'After generating: "1K" (original), "2K" (upscaled, default), "4K" (upscaled; may need a higher plan), or "none".', default: '2K' },
         reference_media: { type: 'array', items: { type: 'string' }, description: 'Project items to attach as references via their tile menu ("Add to prompt"): media ids from earlier results, or exact tile titles. Safer than ingredients when titles repeat.' },
         keep_ingredients: { type: 'boolean', description: 'Keep references already attached to the prompt box. Default false: they are cleared first so they never leak between prompts.', default: false },
-        ingredients: { type: 'array', items: { type: 'string' }, description: 'Names of project assets to reference via "@name". Use flow_list_mention_options to see names.' },
+        ingredients: { type: 'array', items: { type: 'string' }, description: 'References: asset names (inserted via "@name") and/or media ids from earlier results (attached via the tile menu). Names: . Use flow_list_mention_options to see names.' },
         project_name: { type: 'string', description: 'Project to use, by exact name. Reuses the open project if its title matches, otherwise opens the existing project with that name, otherwise creates a new one with that name. Never renames an existing project.' },
         project_id: { type: 'string', description: 'Project ID (from flow_list_projects) — opens that project directly.' },
         new_project: { type: 'boolean', description: 'Always create a new project (named project_name if given).', default: false },
@@ -117,7 +117,7 @@ const TOOL_DEFINITIONS = [
         download: { type: 'string', description: 'Optional: download each new video when done: "720p", "1080p" (upscaled) or "270p" (GIF). Omit to skip.' },
         reference_media: { type: 'array', items: { type: 'string' }, description: 'Project items to attach as references via their tile menu ("Add to prompt"): media ids from earlier results, or exact tile titles. Safer than ingredients when titles repeat.' },
         keep_ingredients: { type: 'boolean', description: 'Keep references already attached to the prompt box. Default false: they are cleared first so they never leak between prompts.', default: false },
-        ingredients: { type: 'array', items: { type: 'string' }, description: 'Names of project assets to reference via "@name".' },
+        ingredients: { type: 'array', items: { type: 'string' }, description: 'References: asset names (inserted via "@name") and/or media ids from earlier results (attached via the tile menu). Names: .' },
         use_character: { type: 'string', description: 'Character name to reference via "@name".' },
         use_scene: { type: 'string', description: 'Scene name to reference via "@name".' },
         project_name: { type: 'string', description: 'Project to use, by exact name. Reuses the open project if its title matches, otherwise opens the existing project with that name, otherwise creates a new one with that name. Never renames an existing project.' },
@@ -300,7 +300,7 @@ const TOOL_DEFINITIONS = [
 ];
 
 async function handleToolCall(name, args) {
-  logger.info('Tool called', { tool: name, args: args ? JSON.stringify(args).substring(0, 200) : 'none' });
+  logger.info('Tool called', { tool: name, argKeys: args ? Object.keys(args) : [], args: args ? JSON.stringify(args).substring(0, 200) : 'none' });
 
   switch (name) {
     case 'flow_connect': {
