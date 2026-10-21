@@ -339,13 +339,35 @@ async function waitVisible(locator, timeout = 3000) {
   }
 }
 
+// Menus use a backdrop; the settings panel is a backdrop-less .cdk-overlay-popover.
+async function overlaysOpen(page) {
+  return page.evaluate(() => {
+    const vis = e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
+    if (document.querySelector('.cdk-overlay-backdrop-showing')) return true;
+    return [...document.querySelectorAll('.cdk-overlay-popover, .cdk-overlay-pane')]
+      .some(e => vis(e) && (e.innerText || '').trim().length > 0);
+  }).catch(() => false);
+}
+
 async function closeOverlays(page) {
   for (let i = 0; i < 4; i++) {
-    const open = await page.locator('.cdk-overlay-backdrop-showing').count().catch(() => 0);
-    if (!open) return;
+    if (!(await overlaysOpen(page))) return;
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(350);
   }
+  // Last resort for the settings popover: toggle its trigger.
+  if (await overlaysOpen(page)) {
+    await page.locator(SETTINGS_TRIGGER).first().click().catch(() => {});
+    await page.waitForTimeout(400);
+  }
+  if (await overlaysOpen(page)) logger.warn('An overlay is still open after closing attempts');
+}
+
+async function readCreditCost(page) {
+  const t = await page.locator(`${OVERLAY} .settings-credit-cost`).first()
+    .textContent({ timeout: 1500 }).catch(() => null);
+  const m = t && t.match(/(\d+)\s*credit/i);
+  return { text: t ? t.replace(/\s+/g, ' ').trim() : null, credits: m ? Number(m[1]) : null };
 }
 
 async function openSettingsPanel(page) {
@@ -459,6 +481,8 @@ export async function configureGenerationUI(options = {}) {
 
   // Verify the model inside the panel (the video chip doesn't show the model).
   const panelModel = await readPanelModel(page);
+  const creditCost = await readCreditCost(page);
+  logger.info('Credit cost shown by Flow', creditCost);
   if (model && panelModel !== normalizeLabel(model)) {
     await closeOverlays(page);
     await takeScreenshot(page, 'configure-ui-verify-failed');
@@ -483,5 +507,5 @@ export async function configureGenerationUI(options = {}) {
     throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE,
       `Quantity check failed: chip shows "${chipText}", expected x${quantity}.`);
   }
-  return { chipText, model: panelModel };
+  return { chipText, model: panelModel, creditCost };
 }

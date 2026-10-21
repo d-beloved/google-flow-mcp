@@ -91,9 +91,10 @@ export async function handleGenerateImage(args) {
         `Ratio "${args.ratio}" not available. Available: ${get('ratios', []).join(', ')}`);
     }
 
+    let uiConfig = null;
     if (!args.skip_config) {
       // STEP 4: Configure the generation UI actively to prevent credit wastage
-      await configureGenerationUI({
+      uiConfig = await configureGenerationUI({
         mode: 'Image',
         ratio,
         model,
@@ -209,6 +210,8 @@ export async function handleGenerateImage(args) {
           'To generate and consume credits, call again with auto_confirm=true.',
         model_used: model,
         ratio,
+        credit_cost: uiConfig?.creditCost?.credits ?? null,
+        credit_cost_text: uiConfig?.creditCost?.text ?? null,
         prompt: args.prompt,
         ingredients_inserted: mentionResults.inserted,
         ingredients_failed: mentionResults.failed,
@@ -316,6 +319,7 @@ export async function handleGenerateImage(args) {
       download_errors: downloadErrors,
       project_url: projectUrl,
       credits_consumed: true,
+      credit_cost: uiConfig?.creditCost?.credits ?? null,
       message: `${media.length} image(s) generated` +
         (downloads.length ? `; ${downloads.length} downloaded (${downloadSize}) to ${downloads.map(d => d.path).join(', ')}` : '') +
         (downloadErrors.length ? `; ${downloadErrors.length} download(s) failed` : '') + '.',

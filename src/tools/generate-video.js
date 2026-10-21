@@ -86,6 +86,7 @@ export async function handleGenerateVideo(args) {
     const base = {
       type: 'video', account: get('expectedAccount'), model_used: model, ratio, duration,
       quantity: qty, chip: config.chipText, prompt: args.prompt,
+      credit_cost: config.creditCost?.credits ?? null, credit_cost_text: config.creditCost?.text ?? null,
       ingredients_inserted: mentionResults.inserted, ingredients_failed: mentionResults.failed,
     };
 
