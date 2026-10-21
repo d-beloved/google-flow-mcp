@@ -60,10 +60,35 @@ async function findVisible(page, selectors) {
  * Returns { searchInput } if the panel opened, or null if it didn't
  * (and removes the stray "@" in that case).
  */
+// Flow (2026-10-21) opens the asset picker only when "@" starts a word, i.e.
+// is preceded by whitespace or is the first character. The End key does not
+// reliably reach the end of a ProseMirror box on macOS, so place the caret by script.
+async function caretToEnd(inputLocator) {
+  return inputLocator.evaluate(el => {
+    el.focus();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    const text = el.innerText.replace(/\n$/, '');
+    return text.length === 0 || /\s$/.test(text);
+  });
+}
+
+export async function countPromptReferences(page) {
+  return page.evaluate(() => ({
+    chips: document.querySelectorAll('[aria-label="What do you want to create?"] .mention-chip').length,
+    ingredients: [...document.querySelectorAll('.prompt-ingredient-bar button[aria-label="Ingredient"]')]
+      .filter(b => b.getBoundingClientRect().width > 0).length,
+  })).catch(() => ({ chips: 0, ingredients: 0 }));
+}
+
 export async function openMentionPopup(page, inputLocator) {
   await inputLocator.click();
-  await page.keyboard.press('End');
-  await typeLikeHuman(page.keyboard, '@');
+  const endsWithSpace = await caretToEnd(inputLocator);
+  await page.keyboard.type(endsWithSpace ? '@' : ' @');
 
   // Wait for the popup search input or add button to become visible
   const searchInputLocator = page.locator(SEARCH_INPUT_SELECTORS.join(', ')).first();
@@ -137,6 +162,7 @@ export async function insertMentionReference(page, inputLocator, name) {
   if (!name) return false;
   logger.info('Inserting @ mention reference', { name });
 
+  const refsBefore = await countPromptReferences(page);
   const popup = await openMentionPopup(page, inputLocator);
   if (!popup) {
     await takeScreenshot(page, 'mention-panel-not-found');
@@ -153,11 +179,25 @@ export async function insertMentionReference(page, inputLocator, name) {
     // Wait for filtered items to load
     const firstResult = page.locator(RESULT_ITEM_SELECTORS.join(', ')).first();
     await firstResult.waitFor({ state: 'attached', timeout: 3000 }).catch(() => {});
+    await page.waitForTimeout(800); // let the search filter apply
   }
 
   // Click the result row whose text matches the requested name
   let itemClicked = false;
-  for (const sel of RESULT_ITEM_SELECTORS) {
+  // Exact title match first (rows read "<title> <Type>"), then substring.
+  const exactIdx = await page.locator(RESULT_ITEM_SELECTORS[0]).evaluateAll((els, target) => {
+    const norm = s => s.replace(/\s+/g, ' ').trim().toLowerCase();
+    return els.findIndex(e => {
+      const t = norm(e.innerText).replace(/\s*(image|video|character|scene|avatar|audio|upload|voice)$/, '');
+      return t === norm(target);
+    });
+  }, name).catch(() => -1);
+  if (exactIdx >= 0) {
+    await page.locator(RESULT_ITEM_SELECTORS[0]).nth(exactIdx).click();
+    itemClicked = true;
+    logger.info('Matched asset row (exact)', { name });
+  }
+  for (const sel of itemClicked ? [] : RESULT_ITEM_SELECTORS) {
     const item = page.locator(sel).filter({ hasText: name }).first();
     if (await item.isVisible().catch(() => false)) {
       await item.click();
@@ -201,9 +241,12 @@ export async function insertMentionReference(page, inputLocator, name) {
   const panelStillOpen = await findVisible(page, [...SEARCH_INPUT_SELECTORS, ...ADD_TO_PROMPT_SELECTORS]);
 
   if (!panelStillOpen) {
-    // Behaviour A: popup closed automatically → reference chip was inserted
-    logger.info('Mention reference inserted directly (popup closed after click)', { name });
-    return true;
+    // Behaviour A (current Flow): clicking the row inserts a .mention-chip and an
+    // ingredient-bar entry, then closes the picker. Verify rather than assume.
+    const after = await countPromptReferences(page);
+    const ok = after.chips > refsBefore.chips || after.ingredients > refsBefore.ingredients;
+    logger[ok ? 'info' : 'warn'](ok ? 'Mention reference inserted' : 'Picker closed but no reference was added', { name, before: refsBefore, after });
+    return ok;
   }
 
   // Behaviour B: panel still open → look for "Add to Prompt" button

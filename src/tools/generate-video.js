@@ -5,7 +5,7 @@ import { FlowError, ErrorCodes } from '../utils/errors.js';
 import { takeScreenshot } from '../utils/screenshots.js';
 import { configureGenerationUI, typeLikeHuman } from '../browser/safe-actions.js';
 import { saveMetadata } from '../utils/file-manager.js';
-import { listMedia, waitForNewMedia, downloadMedia } from '../browser/media.js';
+import { listMedia, waitForNewMedia, downloadMedia, clearPromptIngredients, addMediaToPrompt } from '../browser/media.js';
 import { ensureProjectInContext } from '../navigation/project-navigator.js';
 import { insertMentionReferences } from '../navigation/mentions.js';
 import { get } from '../utils/config.js';
@@ -71,6 +71,9 @@ export async function handleGenerateVideo(args) {
       await takeScreenshot(page, 'no-prompt-input-video');
       throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE, 'Could not find the prompt box ("What do you want to create?").');
     }
+    // References persist in the ingredient bar after the text is cleared; drop them
+    // so one prompt's references never leak into the next.
+    if (args.keep_ingredients !== true) await clearPromptIngredients(page);
     await promptInput.click();
     await page.keyboard.press('ControlOrMeta+a');
     await page.keyboard.press('Backspace');
@@ -84,12 +87,20 @@ export async function handleGenerateVideo(args) {
     let mentionResults = { inserted: [], failed: [] };
     if (mentionNames.length) mentionResults = await insertMentionReferences(page, promptInput, mentionNames);
 
+    const refsAttached = [];
+    const refsFailed = [];
+    for (const ref of (Array.isArray(args.reference_media) ? args.reference_media : [])) {
+      ((await addMediaToPrompt(page, ref)) ? refsAttached : refsFailed).push(ref);
+    }
+    if (refsFailed.length) logger.warn('Some reference_media could not be attached', { refsFailed });
+
     const base = {
       type: 'video', account: get('expectedAccount'), model_used: model, ratio,
       duration: duration || ((config.chipText.match(/\b(\d+s)\b/) || [])[1] ?? null),
       quantity: qty, chip: config.chipText, prompt: args.prompt,
       credit_cost: config.creditCost?.credits ?? null, credit_cost_text: config.creditCost?.text ?? null,
       ingredients_inserted: mentionResults.inserted, ingredients_failed: mentionResults.failed,
+      reference_media_attached: refsAttached, reference_media_failed: refsFailed,
     };
 
     if (!autoConfirm) {

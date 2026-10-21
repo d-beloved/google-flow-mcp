@@ -209,3 +209,38 @@ export async function downloadMedia(page, mediaId, { size = '2K', type = 'image'
     await page.keyboard.press('Escape').catch(() => {});
   }
 }
+
+/** Remove every reference currently attached to the prompt (ingredient bar ×). */
+export async function clearPromptIngredients(page) {
+  const btns = page.locator('.prompt-ingredient-bar button[aria-label="Ingredient"]');
+  for (let i = 0; i < 20; i++) {
+    const n = await btns.count().catch(() => 0);
+    if (!n) return;
+    await btns.first().click().catch(() => {});
+    await page.waitForTimeout(300);
+  }
+}
+
+/**
+ * Attach a project item to the prompt via its tile menu ("Add to prompt").
+ * Accepts a media id from a previous result, or an exact tile title.
+ * Returns true if the ingredient bar grew.
+ */
+export async function addMediaToPrompt(page, idOrTitle) {
+  const media = await listMedia(page);
+  const m = media.find(x => x.id === idOrTitle) || media.find(x => x.title === idOrTitle);
+  if (!m) return false;
+  const count = () => page.locator('.prompt-ingredient-bar button[aria-label="Ingredient"]').count().catch(() => 0);
+  const before = await count();
+  const tile = page.locator(TILE).nth(m.index);
+  await tile.scrollIntoViewIfNeeded().catch(() => {});
+  await tile.click({ button: 'right' });
+  const item = page.locator(MENU_ITEM).filter({ hasText: /Add to prompt$/ }).first();
+  if (!(await item.isVisible({ timeout: 4000 }).catch(() => false))) {
+    await page.keyboard.press('Escape');
+    return false;
+  }
+  await item.click();
+  await page.waitForTimeout(800);
+  return (await count()) > before;
+}

@@ -4,7 +4,7 @@ import { jobQueue } from '../queue/job-queue.js';
 import { FlowError, ErrorCodes } from '../utils/errors.js';
 import { takeScreenshot } from '../utils/screenshots.js';
 import { saveMetadata } from '../utils/file-manager.js';
-import { listMedia, waitForNewMedia, downloadMedia } from '../browser/media.js';
+import { listMedia, waitForNewMedia, downloadMedia, clearPromptIngredients, addMediaToPrompt } from '../browser/media.js';
 import { ensureProjectInContext } from '../navigation/project-navigator.js';
 import { insertMentionReferences } from '../navigation/mentions.js';
 import { get } from '../utils/config.js';
@@ -177,6 +177,9 @@ export async function handleGenerateImage(args) {
     await page.waitForTimeout(200);
 
     // STEP 6: Fill the prompt
+    // References persist in the ingredient bar after the text is cleared; drop them
+    // so one prompt's references never leak into the next.
+    if (args.keep_ingredients !== true) await clearPromptIngredients(page);
     await promptInput.click();
     await page.keyboard.press('ControlOrMeta+a');
     await page.keyboard.press('Backspace');
@@ -199,6 +202,13 @@ export async function handleGenerateImage(args) {
       await page.waitForTimeout(200);
     }
 
+    const refsAttached = [];
+    const refsFailed = [];
+    for (const ref of (Array.isArray(args.reference_media) ? args.reference_media : [])) {
+      ((await addMediaToPrompt(page, ref)) ? refsAttached : refsFailed).push(ref);
+    }
+    if (refsFailed.length) logger.warn('Some reference_media could not be attached', { refsFailed });
+
     // ⚠️ STEP 7: DECISION POINT — auto_confirm determines if we click Generate
     if (!autoConfirm) {
       // SAFE MODE: Setup only, no click. Return "ready_for_confirmation".
@@ -215,6 +225,8 @@ export async function handleGenerateImage(args) {
         prompt: args.prompt,
         ingredients_inserted: mentionResults.inserted,
         ingredients_failed: mentionResults.failed,
+        reference_media_attached: refsAttached,
+        reference_media_failed: refsFailed,
         account: get('expectedAccount'),
         screenshot: setupScreenshot,
         jobId: job.id,
@@ -312,6 +324,8 @@ export async function handleGenerateImage(args) {
       prompt: args.prompt,
       ingredients_inserted: mentionResults.inserted,
       ingredients_failed: mentionResults.failed,
+      reference_media_attached: refsAttached,
+      reference_media_failed: refsFailed,
       image_count: media.length,
       media_ids: media.map(m => m.id),
       titles: media.map(m => m.title),
