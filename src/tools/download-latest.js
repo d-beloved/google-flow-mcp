@@ -11,6 +11,7 @@ import { get } from '../utils/config.js';
  *                For videos, the label prefix Flow offers (default: first option).
  * args.count     how many of the newest items to download (default 1)
  * args.media_id  download this specific item instead
+ * args.title     download the tile with this exact title (scrolls the grid to find it)
  * args.type      "image" | "video" (default: whatever the newest item is)
  * args.project_name / args.project_id  open that project first
  */
@@ -24,6 +25,11 @@ export async function handleDownloadLatest(args = {}) {
   await scrollGridToTop(page);
   if (args.media_id && !(await listMedia(page)).some(m => m.id === args.media_id)) {
     await findTile(page, { id: args.media_id });
+  }
+  if (args.title) {
+    const hit = await findTile(page, { title: args.title });
+    if (!hit) throw new FlowError(ErrorCodes.DOWNLOAD_FAILED, `No tile titled "${args.title}" in this project.`);
+    args = { ...args, media_id: hit.id };
   }
 
   let media = (await listMedia(page)).filter(m => m.ready);
