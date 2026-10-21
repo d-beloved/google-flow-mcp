@@ -1,0 +1,174 @@
+// Media tiles and downloads in a Flow project (verified 2026-10-21).
+//
+//   flow-grid-tile-container[role=group][aria-label="<title>"]  (right-click → menu)
+//     img|video[data-media-id="<uuid>"]
+//   Context menu: Favourite, Reuse prompt, Animate, Add to prompt, Download ▸, ...
+//   Download ▸ (images): "1K Original size", "2K Upscaled", "4K Upscaled"
+//   Upscaling shows a snackbar "Upscaling your image. Download will start
+//   automatically." then "Upscaling complete. Your image has been downloaded!"
+
+import fs from 'fs';
+import path from 'path';
+import { logger } from '../utils/logger.js';
+import { getBrowser } from './connect.js';
+import { takeScreenshot } from '../utils/screenshots.js';
+import { getOutputDir } from '../utils/file-manager.js';
+import { FlowError, ErrorCodes } from '../utils/errors.js';
+
+const MENU_ITEM = '.cdk-overlay-container [role="menuitem"]';
+
+/** All media on the page, in DOM order (newest first in the default grid). */
+export async function listMedia(page) {
+  return page.evaluate(() => [...document.querySelectorAll('[data-media-id]')].map(el => {
+    const tile = el.closest('flow-grid-tile-container');
+    const isVideo = el.tagName === 'VIDEO';
+    const ready = isVideo ? (el.readyState >= 1 || !!el.poster) : (el.complete && el.naturalWidth > 0);
+    return {
+      id: el.getAttribute('data-media-id'),
+      type: isVideo ? 'video' : 'image',
+      title: tile?.getAttribute('aria-label') || '',
+      src: el.currentSrc || el.src || '',
+      ready,
+    };
+  }).filter((m, i, a) => a.findIndex(x => x.id === m.id) === i));
+}
+
+/** Wait until `count` new, loaded media tiles appear that weren't in `beforeIds`. */
+export async function waitForNewMedia(page, beforeIds, { count = 1, timeoutMs = 180000, type } = {}) {
+  const before = new Set(beforeIds);
+  const start = Date.now();
+  let lastShot = 0;
+  while (Date.now() - start < timeoutMs) {
+    const fresh = (await listMedia(page).catch(() => []))
+      .filter(m => !before.has(m.id) && (!type || m.type === type));
+    const ready = fresh.filter(m => m.ready);
+    if (ready.length >= count) return ready.slice(0, count);
+
+    const failed = await page.evaluate(() => {
+      const t = document.body.innerText;
+      const m = t.match(/(Something went wrong[^\n]*|couldn['’]t generate[^\n]*|Generation failed[^\n]*|violates?[^\n]*polic[^\n]*)/i);
+      return m ? m[0] : null;
+    }).catch(() => null);
+    if (failed && !fresh.length) {
+      await takeScreenshot(page, 'generation-failed');
+      throw new FlowError(ErrorCodes.GENERATION_TIMEOUT, `Flow reported: ${failed}`);
+    }
+    if (Date.now() - lastShot > 30000) {
+      lastShot = Date.now();
+      logger.info('Waiting for new media', { elapsedS: Math.round((Date.now() - start) / 1000), fresh: fresh.length });
+    }
+    await page.waitForTimeout(1500);
+  }
+  const partial = (await listMedia(page).catch(() => [])).filter(m => !before.has(m.id) && m.ready);
+  if (partial.length) return partial;
+  await takeScreenshot(page, 'generation-timeout');
+  throw new FlowError(ErrorCodes.GENERATION_TIMEOUT,
+    `No new media appeared within ${Math.round(timeoutMs / 1000)}s. Check the Flow project.`);
+}
+
+async function snackbarText(page) {
+  return page.evaluate(() => [...document.querySelectorAll('mat-snack-bar-container, .mat-mdc-snack-bar-container, [role="alert"], [role="status"]')]
+    .map(e => e.innerText.replace(/\s+/g, ' ').trim()).filter(Boolean).join(' | ')).catch(() => '');
+}
+
+function snapshotDir(dir) {
+  return new Set(fs.existsSync(dir) ? fs.readdirSync(dir) : []);
+}
+
+/**
+ * Download one media tile at the given size via the tile's context menu.
+ * size: "1K" | "2K" | "4K" for images (2K/4K are upscaled by Flow). For videos,
+ * pass the label prefix Flow shows (e.g. "720p"); omit to take the first option.
+ * Returns { path, filename, size, mediaId }.
+ */
+export async function downloadMedia(page, mediaId, { size = '2K', type = 'image', timeoutMs = 180000 } = {}) {
+  const tile = page.locator(`flow-grid-tile-container:has([data-media-id="${mediaId}"])`).first();
+  if (!(await tile.isVisible({ timeout: 10000 }).catch(() => false))) {
+    throw new FlowError(ErrorCodes.DOWNLOAD_FAILED, `Media ${mediaId} is not visible in this project.`);
+  }
+
+  const outDir = getOutputDir(type);
+  const before = snapshotDir(outDir);
+  const browser = getBrowser();
+  let cdp = null;
+  try {
+    cdp = await browser.newBrowserCDPSession();
+    await cdp.send('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: outDir, eventsEnabled: true });
+  } catch (e) {
+    logger.warn('Could not redirect Chrome downloads; falling back to the page download event', { error: e.message });
+    cdp = null;
+  }
+
+  // Playwright may also surface the download; save it if the CDP path didn't apply.
+  let pwDownload = null;
+  const onDownload = d => { pwDownload = d; };
+  page.on('download', onDownload);
+
+  try {
+    await page.keyboard.press('Escape').catch(() => {});
+    await tile.scrollIntoViewIfNeeded().catch(() => {});
+    await tile.click({ button: 'right' });
+
+    const dl = page.locator(MENU_ITEM).filter({ hasText: /Download$/ }).first();
+    if (!(await dl.isVisible({ timeout: 5000 }).catch(() => false))) {
+      await takeScreenshot(page, 'download-menu-missing');
+      throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE, 'Tile menu has no "Download" item.');
+    }
+    await dl.click();
+    await page.waitForTimeout(600);
+
+    const sub = page.locator(`${MENU_ITEM}:not(:has-text("Download"))`);
+    const labels = (await sub.allTextContents()).map(t => t.replace(/\s+/g, ' ').trim());
+    const sizeRe = size ? new RegExp(`^${size.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i') : null;
+    // Submenu items come after the main menu's items; pick from the last menu panel.
+    const panel = page.locator('.cdk-overlay-container [role="menu"]').last();
+    const options = panel.locator('[role="menuitem"]');
+    const optLabels = (await options.allTextContents()).map(t => t.replace(/\s+/g, ' ').trim());
+    const idx = sizeRe ? optLabels.findIndex(t => sizeRe.test(t)) : 0;
+    if (idx < 0) {
+      await page.keyboard.press('Escape'); await page.keyboard.press('Escape');
+      throw new FlowError(ErrorCodes.DOWNLOAD_FAILED,
+        `Download size "${size}" not offered. Options: ${optLabels.join(', ') || labels.join(', ')}`);
+    }
+    logger.info('Downloading media', { mediaId, option: optLabels[idx] });
+    await options.nth(idx).click();
+
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      await page.waitForTimeout(1000);
+      const snack = await snackbarText(page);
+      if (/not available|unable|couldn['’]t|failed|error/i.test(snack) && !/complete/i.test(snack)) {
+        throw new FlowError(ErrorCodes.DOWNLOAD_FAILED, `Flow: ${snack}`);
+      }
+      const added = [...snapshotDir(outDir)].filter(f => !before.has(f) && !f.endsWith('.crdownload') && !f.startsWith('.'));
+      if (added.length) {
+        const file = path.join(outDir, added[0]);
+        // Wait for the file size to settle.
+        let prev = -1;
+        for (let i = 0; i < 10; i++) {
+          const s = fs.statSync(file).size;
+          if (s > 0 && s === prev) break;
+          prev = s;
+          await page.waitForTimeout(500);
+        }
+        return { path: file, filename: added[0], size: optLabels[idx], mediaId };
+      }
+      if (pwDownload) {
+        const name = pwDownload.suggestedFilename() || `${mediaId}.${type === 'video' ? 'mp4' : 'png'}`;
+        const file = path.join(outDir, name);
+        await pwDownload.saveAs(file);
+        return { path: file, filename: name, size: optLabels[idx], mediaId };
+      }
+    }
+    await takeScreenshot(page, 'download-timeout');
+    throw new FlowError(ErrorCodes.DOWNLOAD_FAILED,
+      `Download did not finish within ${Math.round(timeoutMs / 1000)}s. Last Flow message: ${await snackbarText(page)}`);
+  } finally {
+    page.off('download', onDownload);
+    if (cdp) {
+      await cdp.send('Browser.setDownloadBehavior', { behavior: 'default' }).catch(() => {});
+      await cdp.detach().catch(() => {});
+    }
+    await page.keyboard.press('Escape').catch(() => {});
+  }
+}

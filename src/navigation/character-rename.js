@@ -54,7 +54,7 @@ export async function renameCharacterTitle(page, newName) {
       await el.click({ clickCount: 3 });
       await page.waitForTimeout(400);
 
-      await page.keyboard.press('Control+a');
+      await page.keyboard.press('ControlOrMeta+a');
       await page.waitForTimeout(100);
       await typeLikeHuman(page.keyboard, newName);
       await page.keyboard.press('Enter');

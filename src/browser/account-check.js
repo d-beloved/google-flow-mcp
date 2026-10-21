@@ -13,6 +13,22 @@ export async function verifyAccount() {
   logger.info('Verifying Google account on Flow', { expectedAccount: EXPECTED_ACCOUNT });
 
   try {
+    if (/accounts\.google\.com/.test(currentUrl || '')) {
+      throw new FlowError(ErrorCodes.NOT_LOGGED_IN, 'Flow redirected to Google sign-in. Sign in in the automation Chrome.');
+    }
+    // Google bar account button: aria-label "Google Account: <Name> (<email>), ..."
+    const label = await page.locator('a[aria-label^="Google Account:"]').first()
+      .getAttribute('aria-label', { timeout: 5000 }).catch(() => null);
+    const email = label && (label.match(/\(([^)\s]+@[^)\s]+)\)/) || [])[1];
+    if (email) {
+      if (email.toLowerCase() === EXPECTED_ACCOUNT.toLowerCase()) {
+        return { verified: true, account: email, method: 'google-account-button' };
+      }
+      await takeScreenshot(page, 'wrong-account');
+      throw new FlowError(ErrorCodes.WRONG_GOOGLE_ACCOUNT,
+        `Wrong Google account: expected ${EXPECTED_ACCOUNT}, signed in as ${email}.`);
+    }
+
     // Check the page for account indicators
     // Method 1: Look at Google account picker/chip
     const accountChip = await page.$('[data-account-email], [aria-label*="gmail"], [data-test-id*="account"]');

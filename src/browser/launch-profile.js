@@ -8,7 +8,7 @@ import { launchChromeDirect, setPage, setContext, setConnected, setBrowser, isBr
 import { getDefaultChromePath, getChromeProfileSourcePath } from '../utils/platform.js';
 
 const CDP_PORT = get('cdpPort', 9222);
-const FLOW_URL = get('flowUrl', 'https://labs.google/fx/tools/flow');
+const FLOW_URL = get('flowUrl', 'https://flow.google.com');
 
 export async function launchKiaraProfile(headless = false) {
   if (isBrowserConnected()) {
@@ -59,11 +59,11 @@ export async function launchKiaraProfile(headless = false) {
 
 export async function navigateToFlow(page, toolPage) {
   const targetUrl = toolPage === true
-    ? 'https://labs.google/fx/tools/flow'
+    ? 'https://flow.google.com'
     : FLOW_URL;
 
   logger.info('Navigating to Google Flow', { url: targetUrl });
-  await page.goto(targetUrl, { waitUntil: 'networkidle', timeout: 30000 });
+  await page.goto(targetUrl, { waitUntil: 'load', timeout: 30000 });
   await page.waitForTimeout(2000);
 
   const currentUrl = page.url();

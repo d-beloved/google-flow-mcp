@@ -15,10 +15,12 @@ export async function handleListMentionOptions(args = {}) {
   await ensureProjectInContext(page, {
     name: args.project_name,
     campaign: args.campaign,
+    project_id: args.project_id,
   });
 
   // Find a prompt input to open the "@" popup from
   const promptCandidates = [
+    page.locator('[role="textbox"][aria-label="What do you want to create?"]').first(),
     page.locator('[contenteditable="true"]:visible').first(),
     page.locator('textarea:visible').first(),
   ];

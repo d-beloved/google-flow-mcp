@@ -21,14 +21,14 @@ export async function handleFlowStatus() {
       const page = getPage();
       status.currentUrl = page.url();
       status.pageTitle = await page.title();
-      status.flowAccessible = status.currentUrl?.includes('labs.google') || false;
+      status.flowAccessible = /labs\.google|flow\.google\.com/.test(status.currentUrl || '');
       status.oauthRequired = status.currentUrl?.includes('accounts.google.com') || false;
 
       if (status.flowAccessible && !status.oauthRequired) {
-        const accountEl = await page.$('[data-account-email], [aria-label*="gmail"]');
-        if (accountEl) {
-          status.account = await accountEl.textContent();
-        }
+        const label = await page.locator('a[aria-label^="Google Account:"]').first()
+          .getAttribute('aria-label', { timeout: 3000 }).catch(() => null);
+        status.account = (label && (label.match(/\(([^)\s]+@[^)\s]+)\)/) || [])[1]) || null;
+        status.projectId = (status.currentUrl.match(/\/project\/([^/?#]+)/) || [])[1] || null;
       }
     } catch (err) {
       status.browserError = err.message;

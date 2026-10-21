@@ -1,6 +1,6 @@
 {
   "flowHome": ".",
-  "flowUrl": "https://labs.google/fx/tools/flow",
+  "flowUrl": "https://flow.google.com",
   "expectedAccount": "your_email@example.com",
   "chromeProfile": "Default",
   "chromeUserDataDir": "C:/Users/<username>/AppData/Local/Google/Chrome/User Data",
@@ -16,12 +16,12 @@
   "browserMode": "direct-cdp",
   "headless": false,
   "imageModels": {
+    "Nano Banana 2.1": "nano-banana-2.1",
     "Nano Banana Pro": "nano-banana-pro",
-    "Nano Banana 2": "nano-banana-2",
-    "Imagen 4": "imagen-4"
+    "Nano Banana 2 Lite": "nano-banana-2-lite"
   },
   "videoModels": {
-    "Omni Flash": "omni-flash",
+    "Omni 1.1 Flash": "omni-1.1-flash",
     "Veo 3.1 - Lite": "veo-3.1-lite",
     "Veo 3.1 - Fast": "veo-3.1-fast",
     "Veo 3.1 - Quality": "veo-3.1-quality"
@@ -57,5 +57,10 @@
     "tools",
     "trash"
   ],
-  "locale": "en"
+  "locale": "en",
+  "videoResolutions": [
+    "720p",
+    "360p"
+  ],
+  "defaultImageDownload": "2K"
 }

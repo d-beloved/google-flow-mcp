@@ -6,7 +6,7 @@ import { jobQueue } from '../queue/job-queue.js';
 import { takeScreenshot } from '../utils/screenshots.js';
 import { detectPageElements, typeLikeHuman } from '../browser/safe-actions.js';
 import { FlowError, ErrorCodes } from '../utils/errors.js';
-import { ensureProjectInContext, extractProjectId, buildProjectUrl } from '../navigation/project-navigator.js';
+import { handleCreateCharacter } from './create-character.js';
 
 /**
  * Import a character from a saved JSON file (args.file_path).
@@ -46,65 +46,16 @@ export async function handleImportCharacter(args) {
 
   logger.info('Importing character from file', { name: characterName, file: args.file_path });
 
-  // The Characters page only exists scoped to a project
-  // (https://labs.google/fx/tools/flow/project/{id}/characters) — there is
-  // no standalone "/characters" page.
-  const project = await ensureProjectInContext(page, {
-    name: args.project_name,
-    campaign: args.campaign,
-  });
-  const projectId = extractProjectId(project.url);
-  const charsUrl = projectId
-    ? `${buildProjectUrl('https://labs.google/fx/tools/flow', projectId)}/characters`
-    : `${project.url.replace(/\/$/, '')}/characters`;
-
-  await page.goto(charsUrl, { waitUntil: 'networkidle', timeout: 30000 });
-  await page.waitForTimeout(2000);
-
-  const fileInput = await page.$('input[type="file"]');
-  if (!fileInput) {
-    const elements = await detectPageElements();
-    return {
-      status: 'discovery_needed',
-      message: 'Characters page opened. File input for import not auto-detected.',
-      elements,
-      screenshot: await takeScreenshot(page, 'characters-import'),
-    };
-  }
-
-  if (characterName) {
-    const nameInput = await page.$('input[placeholder*="Name" i], input[aria-label*="Name" i]');
-    if (nameInput) {
-      await nameInput.click();
-      await nameInput.fill('');
-      await page.waitForTimeout(200);
-      await typeLikeHuman(nameInput, characterName);
-    }
-  }
-
-  if (referenceImages.length > 0) {
-    await fileInput.setInputFiles(referenceImages);
-    await page.waitForTimeout(2000);
-  }
-
-  if (description) {
-    const descInput = await page.$('textarea, [contenteditable="true"]');
-    if (descInput) {
-      await descInput.click();
-      await descInput.fill('');
-      await page.waitForTimeout(200);
-      await typeLikeHuman(descInput, description);
-    }
-  }
-
-  await takeScreenshot(page, 'character-import-ready');
-
-  return {
-    status: 'ready_for_confirmation',
-    message: 'Character import setup complete. Manual confirmation needed.',
+  // Same form as flow_create_character (/project/{id}/character).
+  return handleCreateCharacter({
     name: characterName,
     description,
     reference_images: referenceImages,
-    screenshot: await takeScreenshot(page, 'character-import-ready'),
-  };
+    archetype: data.archetype,
+    model: data.model,
+    project_name: args.project_name,
+    campaign: args.campaign,
+    project_id: args.project_id,
+    auto_confirm: args.auto_confirm === true,
+  });
 }

@@ -3,54 +3,44 @@ import { getPage } from '../browser/connect.js';
 import { jobQueue } from '../queue/job-queue.js';
 import { FlowError, ErrorCodes } from '../utils/errors.js';
 import { takeScreenshot } from '../utils/screenshots.js';
-import { detectPageElements, configureGenerationUI, typeLikeHuman } from '../browser/safe-actions.js';
-import { prepareDownload, findNewFiles, saveMetadata } from '../utils/file-manager.js';
-import { ensureProjectInContext, navigateToSidebar } from '../navigation/project-navigator.js';
+import { configureGenerationUI, typeLikeHuman } from '../browser/safe-actions.js';
+import { saveMetadata } from '../utils/file-manager.js';
+import { listMedia, waitForNewMedia, downloadMedia } from '../browser/media.js';
+import { ensureProjectInContext } from '../navigation/project-navigator.js';
 import { insertMentionReferences } from '../navigation/mentions.js';
 import { get } from '../utils/config.js';
-import fs from 'fs';
-import path from 'path';
+
+const SHORTCUTS = {
+  quality: 'Veo 3.1 - Quality', premium: 'Veo 3.1 - Quality',
+  fast: 'Veo 3.1 - Fast', speed: 'Veo 3.1 - Fast',
+  lite: 'Veo 3.1 - Lite', test: 'Veo 3.1 - Lite',
+  flash: 'Omni 1.1 Flash', simple: 'Omni 1.1 Flash', 'Omni Flash': 'Omni 1.1 Flash',
+};
 
 function selectVideoModel(requested) {
   const available = get('videoModels', {});
-  if (!requested || requested === 'auto') {
-    return 'Veo 3.1 - Fast';
-  }
-  if (requested === 'quality' || requested === 'premium') return 'Veo 3.1 - Quality';
-  if (requested === 'fast' || requested === 'speed') return 'Veo 3.1 - Fast';
-  if (requested === 'lite' || requested === 'test') return 'Veo 3.1 - Lite';
-  if (requested === 'flash' || requested === 'simple') return 'Omni Flash';
-  if (available[requested]) return requested;
-  return null;
+  if (!requested || requested === 'auto') return 'Veo 3.1 - Fast';
+  const name = SHORTCUTS[requested] || requested;
+  return available[name] ? name : null;
 }
 
 export async function handleGenerateVideo(args) {
+  const autoConfirm = args.auto_confirm === true;
   const job = jobQueue.createJob('video_generation', {
-    prompt: args.prompt,
-    model: args.model || 'auto',
-    ratio: args.ratio || '16:9',
-    duration: args.duration || '4s',
-    quantity: args.quantity || 1,
-    outputFolder: args.output_folder,
-    useCharacter: args.use_character,
-    useScene: args.use_scene,
-    references: args.references,
-    ingredients: args.ingredients,
-    project_name: args.project_name,
-    campaign: args.campaign,
+    prompt: args.prompt, model: args.model || 'auto', ratio: args.ratio || '16:9',
+    duration: args.duration, quantity: args.quantity || 1, auto_confirm: autoConfirm,
+    ingredients: args.ingredients, project_name: args.project_name, campaign: args.campaign,
   });
 
   try {
     jobQueue.startJob(job.id);
     const page = getPage();
 
-    // Ensure we're in a project context
     await ensureProjectInContext(page, {
-      name: args.project_name,
-      campaign: args.campaign,
+      name: args.project_name, campaign: args.campaign,
+      project_id: args.project_id, forceNew: args.new_project === true,
     });
 
-    // Select model
     const model = selectVideoModel(args.model);
     if (!model) {
       const available = Object.keys(get('videoModels', {}));
@@ -58,137 +48,86 @@ export async function handleGenerateVideo(args) {
         `Video model "${args.model}" not available. Available: ${available.join(', ')}`,
         { requested: args.model, available });
     }
-    logger.info('Using video model', { model });
 
-    // Try to find video UI — look for textarea, selectors, etc.
-    const elements = await detectPageElements(page);
-    logger.info('Page elements in project for video', {
-      buttons: elements.buttons.length,
-      inputs: elements.inputs.length,
-    });
-
-    // Find prompt input — try current view first, then navigate sidebar
-    let promptInput = null;
-    const promptCandidates = [
-      page.locator('div[contenteditable="true"][role="textbox"]').first(),
-      page.locator('div[role="textbox"]').first(),
-      page.locator('div[contenteditable="true"]').first(),
-      page.getByRole('textbox').first(),
-      page.locator('textarea:visible, [contenteditable="true"]:visible').first(),
-      page.locator('textarea').first(),
-    ];
-
-    for (const candidate of promptCandidates) {
-      if (await candidate.isVisible().catch(() => false)) {
-        promptInput = candidate;
-        break;
-      }
-    }
-
-    if (!promptInput) {
-      logger.info('No prompt found on current view, trying sidebar navigation');
-      await navigateToSidebar(page, 'Tools');
-      await page.waitForTimeout(500);
-
-      for (const candidate of promptCandidates) {
-        if (await candidate.isVisible().catch(() => false)) {
-          promptInput = candidate;
-          break;
-        }
-      }
-    }
-
-    if (!promptInput) {
-      await takeScreenshot(page, 'no-prompt-input-video');
-      throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE, 'Could not find prompt input for video');
-    }
-
-    // Select ratio
-    const ratios = get('videoRatios', ['9:16', '16:9']);
     const ratio = args.ratio || '16:9';
-    if (!ratios.includes(ratio)) {
-      throw new FlowError(ErrorCodes.RATIO_NOT_AVAILABLE, `Ratio ${ratio} not available for video`);
+    if (!get('videoRatios', ['16:9', '9:16']).includes(ratio)) {
+      throw new FlowError(ErrorCodes.RATIO_NOT_AVAILABLE, `Ratio ${ratio} not available for video (16:9 or 9:16).`);
     }
-
-    // Select duration
-    const durations = get('durations', ['4s', '6s', '8s', '10s']);
-    const duration = args.duration || '4s';
-    if (!durations.includes(duration)) {
-      logger.warn('Duration not available, using 4s', { requested: duration });
+    const duration = args.duration ? (String(args.duration).endsWith('s') ? String(args.duration) : `${args.duration}s`) : '6s';
+    if (!get('durations', ['4s', '6s', '8s', '10s']).includes(duration)) {
+      throw new FlowError(ErrorCodes.INVALID_PARAMS, `Duration ${duration} not available (4s, 6s, 8s, 10s).`);
     }
-
     const qty = Math.min(Math.max(args.quantity || 1, 1), 4);
 
-    // Enforce the settings actively in the UI
-    await configureGenerationUI({
-      mode: 'Video',
-      ratio,
-      model,
-      duration,
-      quantity: qty
+    const config = await configureGenerationUI({
+      mode: 'Video', ratio, model, duration, quantity: qty,
+      videoInput: args.video_input || 'Ingredients',
+      resolution: args.resolution || '720p',
     });
 
-    // Fill prompt
+    const promptInput = page.locator('[role="textbox"][aria-label="What do you want to create?"]').first();
+    if (!(await promptInput.isVisible({ timeout: 10000 }).catch(() => false))) {
+      await takeScreenshot(page, 'no-prompt-input-video');
+      throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE, 'Could not find the prompt box ("What do you want to create?").');
+    }
     await promptInput.click();
-    await page.keyboard.press('Control+a');
+    await page.keyboard.press('ControlOrMeta+a');
     await page.keyboard.press('Backspace');
-    await page.waitForTimeout(200);
     await typeLikeHuman(page.keyboard, args.prompt);
-    await page.waitForTimeout(200);
 
-    // Insert "@" references for any images/characters/scenes to use as ingredients.
-    // Flow opens a popup when "@" is typed, listing project images and characters.
     const mentionNames = [
       ...(Array.isArray(args.ingredients) ? args.ingredients : []),
       ...(args.use_character ? [args.use_character] : []),
       ...(args.use_scene ? [args.use_scene] : []),
     ];
-
     let mentionResults = { inserted: [], failed: [] };
-    if (mentionNames.length > 0) {
-      mentionResults = await insertMentionReferences(page, promptInput, mentionNames);
-      if (mentionResults.failed.length > 0) {
-        logger.warn('Some @ mention references could not be inserted', {
-          failed: mentionResults.failed,
-        });
-      }
-      await page.waitForTimeout(300);
+    if (mentionNames.length) mentionResults = await insertMentionReferences(page, promptInput, mentionNames);
+
+    const base = {
+      type: 'video', account: get('expectedAccount'), model_used: model, ratio, duration,
+      quantity: qty, chip: config.chipText, prompt: args.prompt,
+      ingredients_inserted: mentionResults.inserted, ingredients_failed: mentionResults.failed,
+    };
+
+    if (!autoConfirm) {
+      const screenshot = await takeScreenshot(page, 'video-ready-for-confirmation');
+      const result = { ...base, status: 'ready_for_confirmation', screenshot, jobId: job.id,
+        message: '✅ Video set up. No credits consumed. Call again with auto_confirm=true to generate (uses credits).' };
+      jobQueue.completeJob(job.id, result);
+      return result;
     }
 
-    // Video generation is paid — setup only, no click
-    logger.info('Video generation setup complete — not clicking generate (paid feature)');
-    await takeScreenshot(page, 'video-ready-to-generate');
+    const generateBtn = page.locator('button[aria-label="Start generation"]').first();
+    if (!(await generateBtn.isEnabled({ timeout: 5000 }).catch(() => false))) {
+      await takeScreenshot(page, 'video-generate-disabled');
+      throw new FlowError(ErrorCodes.GENERATION_BUTTON_DISABLED, 'Generate button is disabled.');
+    }
+    const beforeIds = (await listMedia(page)).map(m => m.id);
+    logger.info('⚠️ Clicking Generate for VIDEO — credits will be consumed', { model, duration, qty });
+    await generateBtn.click();
 
-    saveMetadata(job.id, {
-      type: 'video',
-      model,
-      ratio,
-      duration,
-      quantity: qty,
-      prompt: args.prompt,
-      ingredients_requested: mentionNames,
-      ingredients_inserted: mentionResults.inserted,
-      ingredients_failed: mentionResults.failed,
-      status: 'ready_for_confirmation',
-      note: 'Video generation is a paid feature. Manual confirmation required to proceed.',
+    const acceptBtn = page.getByRole('button', { name: /^(Accept|Approve)$/ }).first();
+    if (await acceptBtn.isVisible({ timeout: 5000 }).catch(() => false)) await acceptBtn.click();
+
+    const media = await waitForNewMedia(page, beforeIds, {
+      count: qty, type: 'video', timeoutMs: get('videoGenerationTimeoutMs', 600000),
     });
 
-    jobQueue.completeJob(job.id, {
-      status: 'ready_for_confirmation',
-      type: 'video',
-      account: get('expectedAccount'),
-      model_used: model,
-      ratio,
-      duration,
-      quantity: qty,
-      prompt: args.prompt,
-      ingredients_inserted: mentionResults.inserted,
-      ingredients_failed: mentionResults.failed,
-      message: 'Video generation setup complete. Manual confirmation required (uses credits).',
-      screenshot: await takeScreenshot(page, 'video-ready'),
-    });
+    const downloads = [];
+    const downloadErrors = [];
+    if (args.download && String(args.download).toLowerCase() !== 'none') {
+      for (const m of media) {
+        try { downloads.push(await downloadMedia(page, m.id, { size: args.download, type: 'video' })); }
+        catch (e) { downloadErrors.push({ mediaId: m.id, error: e.message }); }
+      }
+    }
 
-    return jobQueue.getJob(job.id).result;
+    const result = { ...base, status: 'success', credits_consumed: true, project_url: page.url(),
+      media_ids: media.map(m => m.id), titles: media.map(m => m.title), downloads, download_errors: downloadErrors,
+      message: `${media.length} video(s) generated` + (downloads.length ? `; downloaded to ${downloads.map(d => d.path).join(', ')}` : '') + '.' };
+    saveMetadata(job.id, { ...result, jobId: job.id });
+    jobQueue.completeJob(job.id, result);
+    return result;
   } catch (err) {
     await takeScreenshot(getPage(), 'generate-video-error');
     jobQueue.failJob(job.id, err);

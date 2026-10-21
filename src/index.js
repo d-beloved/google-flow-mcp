@@ -78,52 +78,86 @@ const TOOL_DEFINITIONS = [
   },
   {
     name: 'flow_generate_image',
-    description: '⚠️ THESE IMAGES CONSUME CREDITS. By default (auto_confirm=false): fills the prompt, selects model/ratio, takes a screenshot and returns "ready_for_confirmation". Does NOT click Generate. When auto_confirm=true: first verifies the UI is in IMAGE mode (not Video), that the model is an image model, takes a verification screenshot, THEN clicks Generate and waits for the images. NANO/BANANA image models only.',
+    description: '⚠️ CONSUMES CREDITS when auto_confirm=true. Default (auto_confirm=false): fills the prompt, sets model/ratio/count, screenshots, returns "ready_for_confirmation" — no credits. With auto_confirm=true: verifies Image mode + model, clicks Generate, waits for the new image(s), then downloads them (default 2K upscaled) to outputs/images.',
     inputSchema: {
       type: 'object',
       properties: {
         prompt: { type: 'string', description: 'The text prompt for image generation.' },
-        model: { type: 'string', description: 'Model to use: Nano Banana Pro, Nano Banana 2, or Imagen 4.', default: 'Nano Banana 2' },
-        auto_confirm: { type: 'boolean', description: '⚠️ CREDITS. If false (default): only prepares, consumes nothing. If true: verifies that Image mode is active, THEN clicks Generate (consumes credits).', default: false },
-        ratio: { type: 'string', description: 'Aspect ratio: 1:1, 16:9, 9:16, 4:3, 3:4.', default: '1:1' },
-        reference_images: { type: 'array', items: { type: 'string' }, description: 'Paths to local reference images to upload (optional).' },
-        ingredients: { type: 'array', items: { type: 'string' }, description: 'Names of existing project images/characters to reference via "@name" (e.g., ["Bob the Astronaut", "Image 3"]). Use flow_list_mention_options to discover available names.' },
-        brand: { type: 'string', description: 'Brand context for automatic model selection: premium, standard.' },
-        project_name: { type: 'string', description: 'Name for the project (will reuse existing project with same campaign, or create new).' },
-        campaign: { type: 'string', description: 'Campaign identifier for project matching (e.g., "summer-2026", "new-collection").' },
-        skip_config: { type: 'boolean', description: 'Skip configuration of aspect ratio, model type, and quantity in the UI. Respect manual settings.', default: false },
+        model: { type: 'string', description: 'Nano Banana 2.1 (default), Nano Banana Pro, or Nano Banana 2 Lite. "Nano Banana 2" = 2.1.', default: 'Nano Banana 2.1' },
+        auto_confirm: { type: 'boolean', description: '⚠️ CREDITS. false (default): prepare only. true: click Generate.', default: false },
+        ratio: { type: 'string', description: 'Aspect ratio: 16:9, 4:3, 1:1, 3:4, 9:16.', default: '16:9' },
+        quantity: { type: 'number', description: 'Images per run, 1–4 (each uses credits).', default: 1 },
+        download: { type: 'string', description: 'After generating: "1K" (original), "2K" (upscaled, default), "4K" (upscaled; may need a higher plan), or "none".', default: '2K' },
+        ingredients: { type: 'array', items: { type: 'string' }, description: 'Names of project assets to reference via "@name". Use flow_list_mention_options to see names.' },
+        project_name: { type: 'string', description: 'Project to use, by exact name. Reuses the open project if its title matches, otherwise opens the existing project with that name, otherwise creates a new one with that name. Never renames an existing project.' },
+        project_id: { type: 'string', description: 'Project ID (from flow_list_projects) — opens that project directly.' },
+        new_project: { type: 'boolean', description: 'Always create a new project (named project_name if given).', default: false },
+        campaign: { type: 'string', description: 'Campaign tag: reuses the project last used for this campaign.' },
+        skip_config: { type: 'boolean', description: 'Do not touch model/ratio/count; use whatever is set in Flow.', default: false },
       },
       required: ['prompt'],
     },
   },
   {
     name: 'flow_generate_video',
-    description: 'Set up a video generation in Google Flow. Fills prompt, selects Omni Flash or Veo model, configures settings. NOTE: Does NOT click final Generate (paid feature — stops at ready-to-generate).',
+    description: '⚠️ CONSUMES CREDITS (video is expensive) when auto_confirm=true. Default: sets Video mode, model, ratio, duration, resolution, count and fills the prompt — no credits. With auto_confirm=true: clicks Generate and waits for the video(s).',
     inputSchema: {
       type: 'object',
       properties: {
         prompt: { type: 'string', description: 'The text prompt for video generation.' },
-        model: { type: 'string', description: 'Model: Omni Flash, Veo 2, Nano Banana 2.', default: 'Omni Flash' },
-        ratio: { type: 'string', description: 'Aspect ratio: 16:9, 9:16, 1:1.', default: '16:9' },
-        duration: { type: 'number', description: 'Target duration in seconds.', default: 5 },
-        reference_images: { type: 'array', items: { type: 'string' }, description: 'Paths to local reference images to upload (optional).' },
-        ingredients: { type: 'array', items: { type: 'string' }, description: 'Names of existing project images/characters to reference via "@name" (e.g., ["Bob the Astronaut", "Image 3"]). Use flow_list_mention_options to discover available names.' },
-        use_character: { type: 'string', description: 'Name of a single project character to reference via "@name" (added in addition to ingredients).' },
-        use_scene: { type: 'string', description: 'Name of a single project scene to reference via "@name" (added in addition to ingredients).' },
-        project_name: { type: 'string', description: 'Name for the project (will reuse existing project with same campaign, or create new).' },
-        campaign: { type: 'string', description: 'Campaign identifier for project matching (e.g., "summer-2026", "new-collection").' },
+        model: { type: 'string', description: 'Veo 3.1 - Fast (default), Veo 3.1 - Quality, Veo 3.1 - Lite, or Omni 1.1 Flash. Shortcuts: fast, quality, lite, flash.', default: 'Veo 3.1 - Fast' },
+        auto_confirm: { type: 'boolean', description: '⚠️ CREDITS. false (default): prepare only. true: click Generate.', default: false },
+        ratio: { type: 'string', description: '16:9 or 9:16.', default: '16:9' },
+        duration: { type: 'string', description: '4s, 6s, 8s or 10s.', default: '6s' },
+        resolution: { type: 'string', description: '720p or 360p.', default: '720p' },
+        video_input: { type: 'string', description: '"Ingredients" (default) or "Frames".', default: 'Ingredients' },
+        quantity: { type: 'number', description: 'Videos per run, 1–4.', default: 1 },
+        download: { type: 'string', description: 'Optional: download each new video after it finishes, using the label prefix of a Flow download option (e.g. "720p"). Omit to skip.' },
+        ingredients: { type: 'array', items: { type: 'string' }, description: 'Names of project assets to reference via "@name".' },
+        use_character: { type: 'string', description: 'Character name to reference via "@name".' },
+        use_scene: { type: 'string', description: 'Scene name to reference via "@name".' },
+        project_name: { type: 'string', description: 'Project to use, by exact name. Reuses the open project if its title matches, otherwise opens the existing project with that name, otherwise creates a new one with that name. Never renames an existing project.' },
+        project_id: { type: 'string', description: 'Project ID (from flow_list_projects) — opens that project directly.' },
+        new_project: { type: 'boolean', description: 'Always create a new project (named project_name if given).', default: false },
+        campaign: { type: 'string', description: 'Campaign tag: reuses the project last used for this campaign.' },
       },
       required: ['prompt'],
     },
   },
   {
     name: 'flow_download_latest',
-    description: 'Download the most recently generated file from Google Flow.',
+    description: 'Download the newest image(s)/video(s) in a Flow project via the tile menu (Download ▸ size). Images: 1K original, 2K or 4K upscaled (upscaling takes ~10–20s). Saves to outputs/images or outputs/videos.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        size: { type: 'string', description: 'Images: "1K", "2K" (default) or "4K". Videos: a download option label prefix; omit for the first option.' },
+        count: { type: 'number', description: 'How many of the newest items to download.', default: 1 },
+        media_id: { type: 'string', description: 'Download this specific item (media id from a generate result).' },
+        type: { type: 'string', description: '"image" or "video" — only consider that type.' },
+        project_name: { type: 'string', description: 'Open this project (exact name) first.' },
+        project_id: { type: 'string', description: 'Open this project ID first.' },
+      },
+    },
+  },
+  {
+    name: 'flow_list_projects',
+    description: 'List all projects on the Flow home page (name, id, url), newest first.',
     inputSchema: { type: 'object', properties: {} },
   },
   {
+    name: 'flow_open_project',
+    description: 'Open an existing Flow project by name (exact, case-insensitive; or a unique partial match) or by id. Later tool calls use this project.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Project name, e.g. "David Anthology (Goliath)".' },
+        project_id: { type: 'string', description: 'Project ID instead of name.' },
+      },
+    },
+  },
+  {
     name: 'flow_create_character',
-    description: 'Create a new character in Google Flow Characters with name and description. By default (auto_confirm not false), fills the description and clicks the submit arrow to actually create the character, then renames "Untitled Character" to the given name.',
+    description: 'Fill the Flow character form (/project/{id}/character) with a description. Default: prepare only, no credits. With auto_confirm=true: creates the character (credits) and renames it.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -132,7 +166,10 @@ const TOOL_DEFINITIONS = [
         reference_images: { type: 'array', items: { type: 'string' }, description: 'Paths to reference images for character design.' },
         project_name: { type: 'string', description: 'Name for the project (will reuse existing project with same campaign, or create new).' },
         campaign: { type: 'string', description: 'Campaign identifier for project matching (e.g., "summer-2026", "new-collection").' },
-        auto_confirm: { type: 'boolean', description: 'If false, only fills the description and returns "ready_for_confirmation" without submitting (uses credits). Default true.', default: true },
+        auto_confirm: { type: 'boolean', description: '⚠️ CREDITS. false (default): fill the form only. true: click Start generation to create the character.', default: false },
+        archetype: { type: 'string', description: 'Optional preset: The Eccentric, The Professional, The Wildcard, The Familiar, The Wicked, The Fantastical.' },
+        model: { type: 'string', description: 'Optional model, e.g. Nano Banana 2.1.' },
+        project_id: { type: 'string', description: 'Project ID.' },
       },
       required: ['name', 'description'],
     },
@@ -188,8 +225,14 @@ const TOOL_DEFINITIONS = [
   },
   {
     name: 'flow_open_tools_gallery',
-    description: 'Open the Google Flow Tools Gallery and list available tools.',
-    inputSchema: { type: 'object', properties: {} },
+    description: 'Open the project Tools gallery and list tools in My tools, Templates and Community.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        project_name: { type: 'string', description: 'Project (exact name) to open first.' },
+        project_id: { type: 'string', description: 'Project ID to open first.' },
+      },
+    },
   },
   {
     name: 'flow_use_grid_architect',
@@ -215,7 +258,9 @@ const TOOL_DEFINITIONS = [
     inputSchema: {
       type: 'object',
       properties: {
-        tool_name: { type: 'string', description: 'Name of the tool to open (e.g. Grid Architect, Image Generation).' },
+        tool_name: { type: 'string', description: 'Tool card title, e.g. Grid Architect, Image Editor, Poster Designer, ThumbnailForge. See flow_open_tools_gallery.' },
+        tab: { type: 'string', description: 'Optional: My tools, Templates or Community.' },
+        project_id: { type: 'string', description: 'Project ID.' },
         params: { type: 'object', description: 'Optional configuration parameters for the tool.' },
         project_name: { type: 'string', description: 'Name for the project (will reuse existing project with same campaign, or create new).' },
         campaign: { type: 'string', description: 'Campaign identifier for project matching (e.g., "summer-2026", "new-collection").' },
@@ -277,7 +322,7 @@ async function handleToolCall(name, args) {
           status: 'oauth_required',
           message: 'Google Flow requires OAuth authentication. Open Chrome Default manually once:\n'
             + '  1. Launch: google-chrome --profile-directory="Default"\n'
-            + '  2. Navigate to: https://labs.google/fx/tools/flow/tools/grid-architect\n'
+            + '  2. Navigate to: https://flow.google.com → open a project → Tools → Templates → Grid Architect\n'
             + '  3. Complete the Google sign-in (one time)\n'
             + '  4. Retry this MCP tool in headless mode',
           browserType: 'Chrome Default',
@@ -323,6 +368,20 @@ async function handleToolCall(name, args) {
 
     case 'flow_generate_video': {
       const result = await handleGenerateVideo(args);
+      return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+    }
+
+    case 'flow_list_projects': {
+      const { listExistingProjects } = await import('./navigation/project-navigator.js');
+      const projects = await listExistingProjects(getPage());
+      return { content: [{ type: 'text', text: JSON.stringify({ count: projects.length, projects }, null, 2) }] };
+    }
+
+    case 'flow_open_project': {
+      const nav = await import('./navigation/project-navigator.js');
+      const result = args?.project_id
+        ? await nav.ensureProjectInContext(getPage(), { project_id: args.project_id })
+        : await nav.openProjectByName(getPage(), args?.name);
       return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
     }
 

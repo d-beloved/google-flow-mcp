@@ -2,6 +2,7 @@ import { get } from '../utils/config.js';
 import { logger } from '../utils/logger.js';
 import { takeScreenshot } from '../utils/screenshots.js';
 import { getPage } from './connect.js';
+import { FlowError, ErrorCodes } from '../utils/errors.js';
 
 const ACTION_DELAY = get('actionDelayMs', 800);
 
@@ -69,9 +70,30 @@ export async function checkForCaptcha(page) {
  * @param {any} elementOrKeyboard - Playwright locator, element handle, or page.keyboard
  * @param {string} text
  */
+// Text at or under this length is typed key by key (names, "@", search terms),
+// so popups that listen for key events still fire. Longer text is pasted.
+const TYPE_MAX_CHARS = get('typeMaxChars', 30);
+
+/**
+ * Enter text into the focused element (Keyboard) or a Locator.
+ * Short text: typed with human-like delays. Long text (prompts): inserted in
+ * one go via keyboard.insertText — a single input event, like a paste.
+ */
 export async function typeLikeHuman(elementOrKeyboard, text) {
+  const isKeyboard = typeof elementOrKeyboard.insertText === 'function';
+
+  if (text.length > TYPE_MAX_CHARS) {
+    if (isKeyboard) {
+      await elementOrKeyboard.insertText(text);
+    } else {
+      await elementOrKeyboard.focus();
+      await elementOrKeyboard.page().keyboard.insertText(text);
+    }
+    await delay(150);
+    return;
+  }
+
   for (const char of text) {
-    // Random delay between 40ms and 120ms to simulate human speed and variance
     const delayMs = Math.floor(Math.random() * (120 - 40 + 1)) + 40;
     await elementOrKeyboard.type(char);
     await delay(delayMs);
@@ -159,7 +181,7 @@ export async function safeGoto(url, options = {}) {
 
   await delay(preDelay);
   logger.info('Navigating', { url: url.substring(0, 80) });
-  await page.goto(url, { waitUntil: 'networkidle', timeout });
+  await page.goto(url, { waitUntil: 'load', timeout });
   await checkForCaptcha(page);
   await delay(ACTION_DELAY);
 }
@@ -258,41 +280,12 @@ export async function detectPageElements() {
  * Returns 'image', 'video', or null if not determinable.
  */
 export async function readCurrentGenerationMode() {
+  // Settings chip text: "🍌 Nano Banana 2.1 crop_16_9 x1" (image) or "Video · 720p · 6s crop_16_9 x1".
   const page = getPage();
-  try {
-    const result = await page.evaluate(() => {
-      // Strategy 1: Look for tab buttons with known IDs containing trigger-IMAGE / trigger-VIDEO
-      const imageTab = document.querySelector('button[role="tab"][id*="trigger-IMAGE"], [role="tab"][id*="trigger-IMAGE"]');
-      const videoTab = document.querySelector('button[role="tab"][id*="trigger-VIDEO"], [role="tab"][id*="trigger-VIDEO"]');
-
-      if (imageTab && videoTab) {
-        const imageSelected = imageTab.getAttribute('aria-selected') === 'true';
-        const videoSelected = videoTab.getAttribute('aria-selected') === 'true';
-        if (imageSelected) return { mode: 'image', method: 'tab-id' };
-        if (videoSelected) return { mode: 'video', method: 'tab-id' };
-      }
-
-      // Strategy 2: Look for tab buttons where the text is exactly "Image" or "Video"
-      const allTabs = Array.from(document.querySelectorAll('[role="tab"], button[aria-selected]'));
-      for (const tab of allTabs) {
-        const text = (tab.textContent || '').trim();
-        const selected = tab.getAttribute('aria-selected') === 'true';
-        if (selected && (text === 'Image' || text === 'Images')) return { mode: 'image', method: 'tab-text' };
-        if (selected && (text === 'Video' || text === 'Videos')) return { mode: 'video', method: 'tab-text' };
-      }
-
-      // Strategy 3: Look for duration selector (only present in video mode)
-      const hasDuration = !!document.querySelector('[aria-label*="duration" i], [class*="duration"]');
-      if (hasDuration) return { mode: 'video', method: 'duration-check' };
-
-      return { mode: null, method: 'unknown' };
-    });
-    logger.info('Current generation mode detected', result);
-    return result.mode;
-  } catch (e) {
-    logger.warn('Could not detect generation mode', { error: e.message });
-    return null;
-  }
+  const chip = await page.locator('button[aria-label="Settings trigger"]').first()
+    .textContent({ timeout: 5000 }).catch(() => null);
+  if (!chip) return null;
+  return /^\s*Video\b/.test(chip.trim()) ? 'Video' : 'Image';
 }
 
 /**
@@ -307,225 +300,186 @@ export async function readCurrentGenerationMode() {
  *     - Duration tabs (video only): 4s | 6s | 8s
  *     - Model dropdown (arrow_drop_down button)
  */
-export async function configureGenerationUI(options = {}) {
-  const { mode, ratio, model, quantity, duration } = options;
-  const page = getPage();
+// ─────────────────────────────────────────────────────────────────────────────
+// configureGenerationUI — written against the Flow UI on flow.google.com
+// (verified 2026-10-21). The prompt toolbar has one chip,
+// button[aria-label="Settings trigger"] (e.g. "🍌 Nano Banana 2.1 crop_16_9 x1").
+// Clicking it opens a cdk overlay panel with:
+//   • mat-button-toggle radios: Image | Video, ratios, x1..x4 (aria-checked)
+//   • button[aria-label="Select model family"] → menu of [role=menuitem]
+// Never click generic buttons: the header has "Settings" (app settings) and
+// "More options for the project" menus that open overlays and block clicks.
+// ─────────────────────────────────────────────────────────────────────────────
 
+const SETTINGS_TRIGGER = 'button[aria-label="Settings trigger"], button.settings-trigger-button';
+const MODEL_TRIGGER = 'button[aria-label="Select model family"]';
+const OVERLAY = '.cdk-overlay-container';
+
+function escapeRe(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function normalizeLabel(s) {
+  return (s || '')
+    .replace(/\b[a-z0-9]+(?:_[a-z0-9]+)+\b/g, '') // icon ligatures: arrow_drop_down, volume_up, crop_16_9
+    .replace(/[^\p{L}\p{N}\s.:-]/gu, '') // strip emoji / symbols
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+async function waitVisible(locator, timeout = 3000) {
+  try {
+    await locator.waitFor({ state: 'visible', timeout });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function closeOverlays(page) {
+  for (let i = 0; i < 4; i++) {
+    const open = await page.locator('.cdk-overlay-backdrop-showing').count().catch(() => 0);
+    if (!open) return;
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+  }
+}
+
+async function openSettingsPanel(page) {
+  const panelRadio = page.locator(`${OVERLAY} button[role="radio"]`).first();
+  if (await panelRadio.isVisible().catch(() => false)) return true;
+
+  await closeOverlays(page);
+  const trigger = page.locator(SETTINGS_TRIGGER).first();
+  if (!(await waitVisible(trigger, 10000))) {
+    await takeScreenshot(page, 'configure-ui-no-settings-trigger');
+    throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE,
+      'Settings chip (aria-label="Settings trigger") not found in the prompt toolbar.');
+  }
+  await trigger.click();
+  return waitVisible(panelRadio, 5000);
+}
+
+async function pickToggle(page, label) {
+  const btn = page.locator(`${OVERLAY} button[role="radio"]`)
+    .filter({ hasText: new RegExp(`${escapeRe(label)}(\\s|$)`) }).first();
+  if (!(await waitVisible(btn, 3000))) return false;
+  if ((await btn.getAttribute('aria-checked')) !== 'true') {
+    logger.info(`Selecting "${label}"`);
+    await btn.click();
+    await page.waitForFunction(
+      el => el.getAttribute('aria-checked') === 'true',
+      await btn.elementHandle(),
+      { timeout: 3000 }
+    ).catch(() => {});
+  } else {
+    logger.info(`"${label}" already selected`);
+  }
+  return (await btn.getAttribute('aria-checked')) === 'true';
+}
+
+async function pickModel(page, model) {
+  const target = normalizeLabel(model);
+  const modelBtn = page.locator(`${OVERLAY} ${MODEL_TRIGGER}`).first();
+  if (!(await waitVisible(modelBtn, 3000))) return false;
+
+  const current = normalizeLabel(await modelBtn.textContent().catch(() => ''));
+  if (current === target) {
+    logger.info(`Model "${model}" already selected`);
+    return true;
+  }
+
+  logger.info(`Changing model from "${current}" to "${model}"`);
+  await modelBtn.click();
+  const items = page.locator(`${OVERLAY} [role="menuitem"]`);
+  await waitVisible(items.first(), 3000);
+
+  const labels = await items.allTextContents();
+  const idx = labels.findIndex(t => normalizeLabel(t) === target); // exact match only
+  if (idx === -1) {
+    await page.keyboard.press('Escape');
+    logger.warn('Model not in menu', { requested: model, available: labels.map(normalizeLabel) });
+    return false;
+  }
+  await items.nth(idx).click();
+  await page.waitForTimeout(400);
+  return true;
+}
+
+async function readPanelModel(page) {
+  return normalizeLabel(await page.locator(`${OVERLAY} ${MODEL_TRIGGER}`).first().textContent({ timeout: 3000 }).catch(() => ''));
+}
+
+export async function configureGenerationUI(options = {}) {
+  // videoInput: "Frames" | "Ingredients"; resolution: "720p" | "360p" (video only)
+  const { mode, ratio, model, quantity, duration, videoInput, resolution } = options;
+  const page = getPage();
   logger.info('Configuring generation UI', { mode, ratio, model, quantity, duration });
 
-  // ─── STEP 1: Switch mode (Image vs Video) using the KNOWN tab IDs ─────────
-  if (mode) {
-    const isImage = mode === 'Image';
-    const triggerSuffix = isImage ? 'IMAGE' : 'VIDEO';
+  if (!(await openSettingsPanel(page))) {
+    await takeScreenshot(page, 'configure-ui-panel-not-open');
+    throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE, 'Generation settings panel did not open.');
+  }
 
-    // Primary: use the structured tab IDs
-    const modeTab = page.locator(`[role="tab"][id*="trigger-${triggerSuffix}"]`).first();
-    const modeTabVisible = await modeTab.isVisible().catch(() => false);
+  // 1. Mode first: it changes which models are listed.
+  if (mode && !(await pickToggle(page, mode))) {
+    await takeScreenshot(page, 'configure-ui-mode-failed');
+    throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE, `Could not switch to ${mode} mode.`);
+  }
 
-    if (modeTabVisible) {
-      const alreadySelected = await modeTab.getAttribute('aria-selected').catch(() => 'false');
-      if (alreadySelected !== 'true') {
-        logger.info(`Switching to ${mode} mode via tab ID trigger-${triggerSuffix}`);
-        await modeTab.click();
-        
-        // Wait for tab selection to reflect
-        await page.waitForFunction(
-          (el) => el.getAttribute('aria-selected') === 'true',
-          await modeTab.elementHandle(),
-          { timeout: 5000 }
-        ).catch(() => {});
-      } else {
-        logger.info(`Already in ${mode} mode`);
-      }
-    } else {
-      // Fallback: text-based tab search
-      const modeTabByText = page.locator('[role="tab"]')
-        .filter({ hasText: new RegExp(`^${mode}$`, 'i') }).first();
-      if (await modeTabByText.isVisible().catch(() => false)) {
-        logger.info(`Switching to ${mode} mode via text tab fallback`);
-        await modeTabByText.click();
-        await page.waitForFunction(
-          (el) => el.getAttribute('aria-selected') === 'true',
-          await modeTabByText.elementHandle(),
-          { timeout: 5000 }
-        ).catch(() => {});
-      } else {
-        logger.warn(`Could not find ${mode} mode tab — UI may have changed`);
-        await takeScreenshot(page, `configure-ui-no-${mode.toLowerCase()}-tab`);
-      }
+  // 2. Model (selecting a menu item may close the panel — reopen after).
+  if (model) {
+    if (!(await pickModel(page, model))) {
+      await closeOverlays(page);
+      await takeScreenshot(page, 'configure-ui-model-failed');
+      throw new FlowError(ErrorCodes.MODEL_NOT_AVAILABLE,
+        `Model "${model}" not found in Flow's model menu.`);
+    }
+    await openSettingsPanel(page);
+  }
+
+  // 3. Ratio, quantity, duration.
+  if (ratio && !(await pickToggle(page, ratio))) {
+    logger.warn(`Could not select ratio ${ratio}`);
+  }
+  if (quantity && !(await pickToggle(page, `x${quantity}`))) {
+    logger.warn(`Could not select quantity x${quantity}`);
+  }
+  if (mode === 'Video') {
+    if (videoInput && !(await pickToggle(page, videoInput))) logger.warn(`Could not select ${videoInput}`);
+    if (resolution && !(await pickToggle(page, resolution))) logger.warn(`Could not select ${resolution}`);
+    if (duration) {
+      const durStr = String(duration).endsWith('s') ? String(duration) : `${duration}s`;
+      if (!(await pickToggle(page, durStr))) logger.warn(`Could not select duration ${durStr}`);
     }
   }
 
-  // ─── STEP 2: Open the settings/options panel to access ratio, quantity, model ─
-  let panelOpened = false;
-
-  // Try a dedicated settings button first
-  const settingsBtnSelectors = [
-    'button[aria-label*="settings" i]',
-    'button[aria-label*="options" i]',
-    'button[aria-label*="generation settings" i]',
-    'button[aria-label*="image settings" i]',
-    'button[aria-label*="video settings" i]',
-  ];
-
-  for (const sel of settingsBtnSelectors) {
-    const btn = page.locator(sel).first();
-    if (await btn.isVisible().catch(() => false)) {
-      await btn.click();
-      panelOpened = true;
-      logger.info('Opened settings panel via settings button', { sel });
-      break;
-    }
+  // Verify the model inside the panel (the video chip doesn't show the model).
+  const panelModel = await readPanelModel(page);
+  if (model && panelModel !== normalizeLabel(model)) {
+    await closeOverlays(page);
+    await takeScreenshot(page, 'configure-ui-verify-failed');
+    throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE,
+      `Model check failed: panel shows "${panelModel}", expected "${model}".`);
   }
 
-  if (!panelOpened) {
-    // Fallback: click the model-name chip/button
-    const modelChipSelectors = [
-      'button:has-text("Nano Banana")',
-      'button:has-text("Imagen")',
-      'button:has-text("Veo")',
-      'button:has-text("Omni Flash")',
-      'button:has-text("16:9")',
-      'button:has-text("9:16")',
-      'button:has-text("1:1")',
-      'button:has-text("4:3")',
-      'button:has-text("3:4")',
-    ];
+  // 4. Close everything and verify via the chip text.
+  await closeOverlays(page);
+  const chipText = normalizeLabel(
+    await page.locator(SETTINGS_TRIGGER).first().textContent().catch(() => '')
+  );
+  logger.info('Settings chip after configuration', { chipText });
 
-    for (const sel of modelChipSelectors) {
-      const btn = page.locator(sel).first();
-      if (await btn.isVisible().catch(() => false)) {
-        await btn.click();
-        panelOpened = true;
-        logger.info('Opened settings panel via model chip', { sel });
-        break;
-      }
-    }
+  if (mode && !(mode === 'Video' ? /^video/.test(chipText) : !/^video/.test(chipText))) {
+    await takeScreenshot(page, 'configure-ui-verify-failed');
+    throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE,
+      `Mode check failed: chip shows "${chipText}", expected ${mode} mode.`);
   }
-
-  if (panelOpened) {
-    // ─── STEP 3: Select Ratio ───────────────────────────────────────────────
-    if (ratio) {
-      const ratioTab = page.locator('[role="tab"]').filter({ hasText: new RegExp(`^${ratio.replace(':', ':')}$`) }).first();
-      // Wait for it to be visible first, ensuring settings panel is hydrated/open
-      await ratioTab.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
-      if (await ratioTab.isVisible().catch(() => false)) {
-        const ratioSelected = await ratioTab.getAttribute('aria-selected').catch(() => 'false');
-        if (ratioSelected !== 'true') {
-          logger.info(`Setting ratio to ${ratio}`);
-          await ratioTab.click();
-          await page.waitForFunction(
-            (el) => el.getAttribute('aria-selected') === 'true',
-            await ratioTab.elementHandle(),
-            { timeout: 3000 }
-          ).catch(() => {});
-        } else {
-          logger.info(`Ratio ${ratio} already selected`);
-        }
-      } else {
-        logger.warn(`Could not find ratio tab for ${ratio}`);
-      }
-    }
-
-    // ─── STEP 4: Select Duration (video only) ──────────────────────────────
-    if (duration && mode === 'Video') {
-      const durStr = duration.endsWith('s') ? duration : `${duration}s`;
-      const durTab = page.locator('[role="tab"]').filter({ hasText: new RegExp(`^${durStr}$`) }).first();
-      await durTab.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
-      if (await durTab.isVisible().catch(() => false)) {
-        logger.info(`Setting duration to ${durStr}`);
-        await durTab.click();
-        await page.waitForFunction(
-          (el) => el.getAttribute('aria-selected') === 'true',
-          await durTab.elementHandle(),
-          { timeout: 3000 }
-        ).catch(() => {});
-      } else {
-        logger.warn(`Could not find duration tab for ${durStr}`);
-      }
-    }
-
-    // ─── STEP 5: Select Quantity ────────────────────────────────────────────
-    if (quantity) {
-      const qtyVariants = [
-        `${quantity}x`,
-        `x${quantity}`,
-        String(quantity),
-      ];
-      let qtySet = false;
-      for (const qtyStr of qtyVariants) {
-        const qtyTab = page.locator('[role="tab"]').filter({ hasText: new RegExp(`^${qtyStr}$`) }).first();
-        await qtyTab.waitFor({ state: 'visible', timeout: 1000 }).catch(() => {});
-        if (await qtyTab.isVisible().catch(() => false)) {
-          const qtySelected = await qtyTab.getAttribute('aria-selected').catch(() => 'false');
-          if (qtySelected !== 'true') {
-            logger.info(`Setting quantity to ${qtyStr}`);
-            await qtyTab.click();
-            await page.waitForFunction(
-              (el) => el.getAttribute('aria-selected') === 'true',
-              await qtyTab.elementHandle(),
-              { timeout: 3000 }
-            ).catch(() => {});
-          } else {
-            logger.info(`Quantity ${qtyStr} already selected`);
-          }
-          qtySet = true;
-          break;
-        }
-      }
-      if (!qtySet) logger.warn(`Could not find quantity tab for quantity ${quantity}`);
-    }
-
-    // ─── STEP 6: Select Model via dropdown ─────────────────────────────────
-    if (model) {
-      const dropdownBtns = await page.locator('button').all();
-      let dropdownBtn = null;
-      for (const btn of dropdownBtns) {
-        if (!(await btn.isVisible().catch(() => false))) continue;
-        const txt = (await btn.textContent().catch(() => '')).trim();
-        if (txt.includes('arrow_drop_down') || (await btn.getAttribute('aria-haspopup').catch(() => null))) {
-          dropdownBtn = btn;
-          break;
-        }
-      }
-
-      if (dropdownBtn) {
-        const currentModelName = (await dropdownBtn.textContent().catch(() => ''))
-          .replace('arrow_drop_down', '').trim().toLowerCase();
-        const targetModel = model.toLowerCase();
-
-        if (!currentModelName.includes(targetModel) && !targetModel.includes(currentModelName)) {
-          logger.info(`Changing model from "${currentModelName}" to "${model}"`);
-          await dropdownBtn.click();
-
-          const modelOption = page.locator('[role="option"], [role="menuitem"], li, button')
-            .filter({ hasText: new RegExp(model, 'i') }).first();
-          
-          await modelOption.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {});
-          if (await modelOption.isVisible().catch(() => false)) {
-            await modelOption.click();
-            // Wait for dropdown to close and model label to update
-            await page.waitForFunction(
-              ([btn, name]) => btn.textContent.toLowerCase().includes(name),
-              [await dropdownBtn.elementHandle(), targetModel],
-              { timeout: 5000 }
-            ).catch(() => {});
-            logger.info(`Model changed to ${model}`);
-          } else {
-            logger.warn(`Model option "${model}" not found in dropdown`);
-            await page.keyboard.press('Escape');
-          }
-        } else {
-          logger.info(`Model "${model}" already selected (current: "${currentModelName}")`);
-        }
-      } else {
-        logger.warn('Model dropdown button not found in settings panel');
-      }
-    }
-
-    // ─── STEP 7: Close settings panel ──────────────────────────────────────
-    logger.info('Closing generation settings panel');
-    await page.keyboard.press('Escape');
-    await page.waitForTimeout(200); // Small safety buffer for UI animation transition
+  if (quantity && !new RegExp(`\\bx${quantity}\\b`).test(chipText)) {
+    await takeScreenshot(page, 'configure-ui-verify-failed');
+    throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE,
+      `Quantity check failed: chip shows "${chipText}", expected x${quantity}.`);
   }
+  return { chipText, model: panelModel };
 }

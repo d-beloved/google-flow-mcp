@@ -4,17 +4,22 @@ import { jobQueue } from '../queue/job-queue.js';
 import { FlowError, ErrorCodes } from '../utils/errors.js';
 import { takeScreenshot } from '../utils/screenshots.js';
 import { saveMetadata } from '../utils/file-manager.js';
+import { listMedia, waitForNewMedia, downloadMedia } from '../browser/media.js';
 import { ensureProjectInContext } from '../navigation/project-navigator.js';
 import { insertMentionReferences } from '../navigation/mentions.js';
 import { get } from '../utils/config.js';
 import { configureGenerationUI, typeLikeHuman } from '../browser/safe-actions.js';
 
+// Old names still accepted; Flow renamed "Nano Banana 2" to "Nano Banana 2.1".
+const MODEL_ALIASES = { 'Nano Banana 2': 'Nano Banana 2.1' };
+
 function selectModel(requested) {
   const available = get('imageModels', {});
   if (!requested || requested === 'auto') {
-    return 'Nano Banana 2';
+    return 'Nano Banana 2.1';
   }
-  if (available[requested]) return requested;
+  const name = MODEL_ALIASES[requested] || requested;
+  if (available[name]) return name;
   return null;
 }
 
@@ -51,6 +56,8 @@ export async function handleGenerateImage(args) {
     await ensureProjectInContext(page, {
       name: args.project_name,
       campaign: args.campaign,
+      project_id: args.project_id,
+      forceNew: args.new_project === true,
     });
 
     // STEP 2: Model selection (config-level, before UI interaction)
@@ -134,7 +141,12 @@ export async function handleGenerateImage(args) {
     // STEP 5: Find the prompt input (contenteditable div at bottom toolbar)
     let promptInput = null;
 
+    // Current Flow UI: ProseMirror div with this aria-label. Wait for it to render.
+    const knownPrompt = page.locator('[role="textbox"][aria-label="What do you want to create?"]').first();
+    await knownPrompt.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
+
     const promptCandidates = [
+      knownPrompt,
       page.locator('div[contenteditable="true"][role="textbox"]').first(),
       page.locator('div[role="textbox"]').first(),
       page.locator('div[contenteditable="true"]').first(),
@@ -165,7 +177,7 @@ export async function handleGenerateImage(args) {
 
     // STEP 6: Fill the prompt
     await promptInput.click();
-    await page.keyboard.press('Control+a');
+    await page.keyboard.press('ControlOrMeta+a');
     await page.keyboard.press('Backspace');
     await page.waitForTimeout(200);
     await typeLikeHuman(page.keyboard, args.prompt);
@@ -213,7 +225,10 @@ export async function handleGenerateImage(args) {
     const preGenScreenshot = await takeScreenshot(page, 'pre-generate-verification');
 
     // STEP 8: Find generate button
-    const generateBtnLocator = page.locator('button:has-text("arrow_forward")').first();
+    const knownGenerateBtn = page.locator('button[aria-label="Start generation"]').first();
+    const generateBtnLocator = (await knownGenerateBtn.isVisible().catch(() => false))
+      ? knownGenerateBtn
+      : page.locator('button:has-text("arrow_forward")').first();
     const generateBtnVisible = await generateBtnLocator.isVisible().catch(() => false);
     if (!generateBtnVisible) {
       await takeScreenshot(page, 'no-generate-btn');
@@ -237,147 +252,52 @@ export async function handleGenerateImage(args) {
       throw new FlowError(ErrorCodes.GENERATION_BUTTON_DISABLED, 'Generate button is disabled');
     }
 
-    // Set up network interception for image generation *before* clicking Generate
-    const interceptedUuids = new Set();
-    const responseHandler = async (response) => {
-      try {
-        const url = response.url();
-        // 1. Direct match on media redirect name query parameter
-        const redirectMatch = url.match(/media\.getMediaUrlRedirect\?name=([a-f0-9-]+)/);
-        if (redirectMatch) {
-          interceptedUuids.add(redirectMatch[1]);
-          return;
-        }
-
-        // 2. Check if it's a tRPC API JSON response containing image metadata
-        if (url.includes('api/trpc') && (url.includes('media') || url.includes('task') || url.includes('generate')) && response.status() === 200) {
-          const contentType = response.headers()['content-type'] || '';
-          if (contentType.includes('application/json')) {
-            const data = await response.json().catch(() => null);
-            if (data) {
-              const text = JSON.stringify(data);
-              const matches = text.match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi);
-              if (matches) {
-                matches.forEach(uuid => interceptedUuids.add(uuid.toLowerCase()));
-              }
-            }
-          }
-        }
-      } catch (err) {
-        // Safe catch for binary/empty responses
-      }
-    };
-    page.on('response', responseHandler);
+    // Snapshot existing media so we can spot the new result(s).
+    const beforeIds = (await listMedia(page)).map(m => m.id);
 
     // STEP 10: Click generate ⚠️ CREDITS WILL BE CONSUMED
     logger.info('⚠️⚠️⚠️ Clicking Generate — credits will be consumed');
     await generateBtnLocator.click();
 
-    // STEP 11: Handle two possible generation flows:
-    //   A) Agent-mediated: Agent asks "Accept?" before generating (when switching modes)
-    //   B) Direct: generation starts immediately (most common)
-    // Try Agent first (short wait), fall through to direct if not detected
-
+    // STEP 11: If the Agent asks for approval, accept (exact button names only).
     let flowMode = 'direct';
-    logger.info('Checking for Agent confirmation dialog (5s window)...');
-    const acceptTimeoutMs = get('agentResponseTimeoutMs', 5000);
-    const acceptStart = Date.now();
-
-    while (Date.now() - acceptStart < acceptTimeoutMs) {
-      const pageText = await page.evaluate(() => document.body.innerText).catch(() => '');
-      if (pageText.includes('Accept') || pageText.includes('Approve')) {
-        logger.info('Agent confirmation dialog detected — switching to Agent flow');
-        const acceptBtn = page.getByRole('button', { name: /Accept|Approve/i }).first();
-        await acceptBtn.click();
-        logger.info('Generation confirmed via Agent');
-        flowMode = 'agent';
-        break;
-      }
-      await page.waitForTimeout(200);
+    const acceptBtn = page.getByRole('button', { name: /^(Accept|Approve)$/ }).first();
+    if (await acceptBtn.isVisible({ timeout: get('agentResponseTimeoutMs', 5000) }).catch(() => false)) {
+      await acceptBtn.click();
+      flowMode = 'agent';
+      logger.info('Generation confirmed via Agent');
     }
-
     logger.info('Generation flow', { mode: flowMode });
 
-    // STEP 12: Wait for images to appear (Network Interception with DOM fallback)
-    logger.info('Waiting for generated images...');
-    let generatedImageUuids = [];
-    const genTimeoutMs = get('generationTimeoutMs', 120000);
-    const genStart = Date.now();
+    // STEP 12: Wait for the new image tile(s).
+    const quantity = args.quantity || 1;
+    const media = await waitForNewMedia(page, beforeIds, {
+      count: quantity, type: 'image', timeoutMs: get('generationTimeoutMs', 180000),
+    });
+    logger.info('Generated images detected', { count: media.length, ids: media.map(m => m.id) });
 
-    try {
-      while (Date.now() - genStart < genTimeoutMs) {
-        await page.waitForTimeout(500);
-
-        if (interceptedUuids.size > 0) {
-          generatedImageUuids = [...interceptedUuids];
-          logger.info('Generated images detected via network interception', { count: generatedImageUuids.length });
-          break;
-        }
-
-        // Fallback: Scan DOM just in case network interception missed it
-        const domUuids = await page.evaluate(() => {
-          const imgs = Array.from(document.querySelectorAll('img'));
-          const uuids = [];
-          imgs.forEach(img => {
-            const src = img.src || '';
-            const match = src.match(/media\.getMediaUrlRedirect\?name=([a-f0-9-]+)/);
-            if (match && img.width > 100) {
-              uuids.push(match[1]);
-            }
-          });
-          return [...new Set(uuids)];
-        }).catch(() => []);
-
-        if (domUuids.length > 0) {
-          generatedImageUuids = domUuids;
-          logger.info('Generated images detected via DOM fallback', { count: domUuids.length });
-          break;
-        }
-
-        const hasDownload = await page.locator(
-          'text=Download, [aria-label*="download" i]'
-        ).first().isVisible().catch(() => false);
-        if (hasDownload) {
-          logger.info('Download button appeared after generation');
-          break;
-        }
-
-        if ((Date.now() - genStart) % 30000 === 0) {
-          logger.info('Still waiting for images...', { elapsed: Date.now() - genStart });
-          await takeScreenshot(page, `gen-wait-${Math.round((Date.now() - genStart) / 1000)}s`);
+    // STEP 13: Optional download (default 2K upscaled; "none" to skip).
+    const downloadSize = args.download === undefined ? get('defaultImageDownload', '2K') : args.download;
+    const downloads = [];
+    const downloadErrors = [];
+    if (downloadSize && String(downloadSize).toLowerCase() !== 'none') {
+      for (const m of media) {
+        try {
+          downloads.push(await downloadMedia(page, m.id, { size: downloadSize, type: 'image' }));
+        } catch (e) {
+          logger.warn('Download failed', { mediaId: m.id, error: e.message });
+          downloadErrors.push({ mediaId: m.id, error: e.message });
         }
       }
-    } finally {
-      page.off('response', responseHandler);
     }
 
-    if (generatedImageUuids.length === 0) {
-      await takeScreenshot(page, 'no-images-detected');
-      throw new FlowError(ErrorCodes.DOWNLOAD_FAILED,
-        'Generation completed but no images were detected in the DOM. ' +
-        'Check the Flow project content library.');
-    }
-
-    // STEP 13: Images are in the project — no download needed.
-    // Return the project URL and image UUIDs so the user can view them in the browser.
     const projectUrl = page.url();
-    const imageUrls = generatedImageUuids.map(
-      uuid => `https://labs.google/fx/api/trpc/media.getMediaUrlRedirect?name=${uuid}`
-    );
-
     saveMetadata(job.id, {
-      type: 'image',
-      model,
-      ratio,
-      auto_confirm: true,
-      quantity: args.quantity || 1,
-      prompt: args.prompt,
+      type: 'image', model, ratio, auto_confirm: true, quantity, prompt: args.prompt,
       ingredients_requested: mentionNames,
       ingredients_inserted: mentionResults.inserted,
       ingredients_failed: mentionResults.failed,
-      jobId: job.id,
-      imageUuids: generatedImageUuids,
-      projectUrl,
+      jobId: job.id, media, downloads, downloadErrors, projectUrl,
     });
 
     jobQueue.completeJob(job.id, {
@@ -389,12 +309,16 @@ export async function handleGenerateImage(args) {
       prompt: args.prompt,
       ingredients_inserted: mentionResults.inserted,
       ingredients_failed: mentionResults.failed,
-      image_count: generatedImageUuids.length,
-      image_uuids: generatedImageUuids,
-      image_urls: imageUrls,
+      image_count: media.length,
+      media_ids: media.map(m => m.id),
+      titles: media.map(m => m.title),
+      downloads,
+      download_errors: downloadErrors,
       project_url: projectUrl,
       credits_consumed: true,
-      message: `${generatedImageUuids.length} image(s) generated. View them in the project: ${projectUrl}`,
+      message: `${media.length} image(s) generated` +
+        (downloads.length ? `; ${downloads.length} downloaded (${downloadSize}) to ${downloads.map(d => d.path).join(', ')}` : '') +
+        (downloadErrors.length ? `; ${downloadErrors.length} download(s) failed` : '') + '.',
     });
 
     return jobQueue.getJob(job.id).result;

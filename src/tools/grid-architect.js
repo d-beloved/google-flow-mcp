@@ -1,153 +1,44 @@
-import { logger } from '../utils/logger.js';
 import { getPage } from '../browser/connect.js';
 import { jobQueue } from '../queue/job-queue.js';
 import { takeScreenshot } from '../utils/screenshots.js';
-import { detectPageElements, typeLikeHuman } from '../browser/safe-actions.js';
 import { saveMetadata } from '../utils/file-manager.js';
-import { FlowError, ErrorCodes } from '../utils/errors.js';
-import { ensureProjectInContext, navigateToSidebar } from '../navigation/project-navigator.js';
-import fs from 'fs';
+import { openToolByName, fillToolParams } from '../navigation/tools.js';
 
-export async function handleUseGridArchitect(args) {
-  const job = jobQueue.createJob('grid_architect', {
-    ...args,
-    project_name: args.project_name,
-    campaign: args.campaign,
-  });
-
+/**
+ * Open Grid Architect (Templates tab) and best-effort fill its fields.
+ * The tool runs in a sandboxed iframe; fields are matched by label/placeholder.
+ * Does not click generate.
+ */
+export async function handleUseGridArchitect(args = {}) {
+  const job = jobQueue.createJob('grid_architect', { ...args });
   try {
     jobQueue.startJob(job.id);
     const page = getPage();
-
-    await ensureProjectInContext(page, {
-      name: args.project_name,
-      campaign: args.campaign,
+    const tool = await openToolByName(page, 'Grid Architect', {
+      name: args.project_name, campaign: args.campaign, project_id: args.project_id, tab: 'Templates',
     });
 
-    // Navigate to Tools sidebar section
-    await navigateToSidebar(page, 'Tools');
-    await page.waitForTimeout(2000);
-    await takeScreenshot(page, 'tools-section');
+    const params = {};
+    if (args.theme_prompt) params['Theme'] = args.theme_prompt;
+    (args.shot_prompts || []).forEach((p, i) => { params[`Shot ${i + 1}`] = p; });
+    if (args.engine) params['Model'] = args.engine;
+    if (args.ratio) params['Aspect ratio'] = args.ratio;
+    if (args.visual_logic) params['Visual logic'] = args.visual_logic;
+    const fill = await fillToolParams(page, params);
 
-    // Find and click Grid Architect within tools
-    const gaLocator = page.locator(
-      'a:has-text("Grille"), a:has-text("Grid"), button:has-text("Grille"), button:has-text("Grid"), text=Architect'
-    ).first();
-    if (await gaLocator.isVisible().catch(() => false)) {
-      await gaLocator.click();
-      await page.waitForTimeout(3000);
-    }
-
-    await takeScreenshot(page, 'grid-architect-loaded');
-
-    // Detect all UI elements
-    const elements = await detectPageElements(page);
-
-    // Set engine if specified
-    if (args.engine) {
-      try {
-        const engineLocator = page.locator(`button:has-text("${args.engine}")`).first();
-        if (await engineLocator.isVisible().catch(() => false)) {
-          await engineLocator.click();
-          await page.waitForTimeout(500);
-        }
-      } catch { /* ok */ }
-    }
-
-    // Set ratio if specified
-    if (args.ratio) {
-      try {
-        const ratioLocator = page.locator(`button:has-text("${args.ratio}")`).first();
-        if (await ratioLocator.isVisible().catch(() => false)) {
-          await ratioLocator.click();
-          await page.waitForTimeout(500);
-        }
-      } catch { /* ok */ }
-    }
-
-    // Set visual logic
-    if (args.visual_logic) {
-      try {
-        const vlLocator = page.locator(`button:has-text("${args.visual_logic}")`).first();
-        if (await vlLocator.isVisible().catch(() => false)) {
-          await vlLocator.click();
-          await page.waitForTimeout(500);
-        }
-      } catch { /* ok */ }
-    }
-
-    // Fill theme prompt
-    if (args.theme_prompt) {
-      const themeLocator = page.locator('textarea, [contenteditable="true"]').first();
-      if (await themeLocator.isVisible().catch(() => false)) {
-        await themeLocator.click();
-        await themeLocator.fill('');
-        await page.waitForTimeout(200);
-        await typeLikeHuman(themeLocator, args.theme_prompt);
-        await page.waitForTimeout(500);
-      }
-    }
-
-    // Fill shot prompts if provided
-    if (args.shot_prompts && Array.isArray(args.shot_prompts)) {
-      for (let i = 0; i < args.shot_prompts.length; i++) {
-        const shotLabel = `Shot ${i + 1}`;
-        const shotLocator = page.locator(`text="${shotLabel}"`).first();
-        const shotInput = await shotLocator.isVisible().catch(() => false) ? shotLocator : null;
-        if (shotInput) {
-          await shotInput.click();
-          await page.waitForTimeout(200);
-          const nearestTextarea = page.locator('textarea').first();
-          if (await nearestTextarea.isVisible().catch(() => false)) {
-            await nearestTextarea.fill('');
-            await page.waitForTimeout(200);
-            await typeLikeHuman(nearestTextarea, args.shot_prompts[i]);
-            await page.waitForTimeout(500);
-          }
-        }
-      }
-    }
-
-    // Upload references
-    if (args.references && Array.isArray(args.references)) {
-      for (const ref of args.references) {
-        try {
-          const fileLocator = page.locator('input[type="file"]').first();
-          if (fs.existsSync(ref)) {
-            await fileLocator.setInputFiles(ref).catch(() => {});
-            await page.waitForTimeout(2000);
-          }
-        } catch { /* ok */ }
-      }
-    }
-
-    await takeScreenshot(page, 'grid-architect-ready');
-
-    saveMetadata(job.id, {
-      type: 'grid_architect',
-      engine: args.engine,
-      ratio: args.ratio,
-      themePrompt: args.theme_prompt,
-      shotCount: args.shot_prompts?.length || 0,
-      projectName: args.project_name,
-      campaign: args.campaign,
-      status: 'ready_for_confirmation',
-    });
-
-    jobQueue.completeJob(job.id, {
+    const result = {
       status: 'ready_for_confirmation',
       type: 'grid_architect',
-      engine: args.engine || 'Nano Banana 2',
-      ratio: args.ratio || '16:9',
-      elements_detected: {
-        buttons: elements.buttons.map(b => b.text),
-        inputs: elements.inputs,
-      },
-      message: 'Grid Architect setup complete. Manual confirmation needed to generate (uses credits).',
+      url: tool.url,
+      frame_loaded: !!tool.frame,
+      params_filled: fill.filled,
+      params_not_found: fill.missing,
+      message: 'Grid Architect opened. Fields that could not be matched are listed in params_not_found — fill those in Flow. Generating uses credits.',
       screenshot: await takeScreenshot(page, 'grid-architect-ready'),
-    });
-
-    return jobQueue.getJob(job.id).result;
+    };
+    saveMetadata(job.id, { ...result, args });
+    jobQueue.completeJob(job.id, result);
+    return result;
   } catch (err) {
     await takeScreenshot(getPage(), 'grid-architect-error');
     jobQueue.failJob(job.id, err);

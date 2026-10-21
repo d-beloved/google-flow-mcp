@@ -1,67 +1,33 @@
-import { logger } from '../utils/logger.js';
 import { getPage } from '../browser/connect.js';
 import { takeScreenshot } from '../utils/screenshots.js';
-import { detectPageElements, typeLikeHuman } from '../browser/safe-actions.js';
-import { ensureProjectInContext, navigateToSidebar } from '../navigation/project-navigator.js';
+import { openToolByName, fillToolParams } from '../navigation/tools.js';
 
-export async function handleUseFlowTool(args) {
+/**
+ * Open a Flow tool by name and (best effort) fill its fields.
+ * Tools run in a sandboxed iframe; params are matched by field label,
+ * placeholder or name. Never clicks a tool's generate/run button.
+ */
+export async function handleUseFlowTool(args = {}) {
   const page = getPage();
-  const toolName = args.tool_name || args.name;
+  const name = args.tool_name || args.name;
+  if (!name) throw new Error('Tool name is required');
 
-  if (!toolName) {
-    throw new Error('Tool name is required');
-  }
-
-  await ensureProjectInContext(page, {
-    name: args.project_name,
-    campaign: args.campaign,
+  const tool = await openToolByName(page, name, {
+    name: args.project_name, campaign: args.campaign, project_id: args.project_id, tab: args.tab,
   });
-
-  // Navigate to Tools sidebar
-  await navigateToSidebar(page, 'Tools');
-  await page.waitForTimeout(2000);
-
-  // Find the tool in the tools section
-  const toolLocator = page.locator(
-    `a:has-text("${toolName}"), button:has-text("${toolName}"), text="${toolName}"`
-  ).first();
-
-  if (await toolLocator.isVisible().catch(() => false)) {
-    await toolLocator.click();
-    await page.waitForTimeout(3000);
-  } else {
-    // Fallback: try direct URL
-    const toolSlug = toolName.toLowerCase().replace(/\s+/g, '-');
-    const toolUrl = `https://labs.google/fx/tools/flow/tools/${toolSlug}`;
-    await page.goto(toolUrl, { waitUntil: 'networkidle', timeout: 30000 });
-    await page.waitForTimeout(2000);
-  }
-
-  const elements = await detectPageElements(page);
-
-  if (args.params && typeof args.params === 'object') {
-    for (const [key, value] of Object.entries(args.params)) {
-      if (typeof value === 'string') {
-        const input = await page.$(
-          `[name="${key}"], [placeholder="${key}"], [aria-label="${key}"]`
-        );
-        if (input) {
-          await input.click();
-          await input.fill('');
-          await page.waitForTimeout(200);
-          await typeLikeHuman(input, value);
-        }
-      }
-    }
-  }
-
-  await takeScreenshot(page, `tool-${toolName.replace(/\s/g, '-')}-setup`);
+  const fill = args.params && typeof args.params === 'object'
+    ? await fillToolParams(page, args.params)
+    : { filled: [], missing: [] };
 
   return {
-    status: 'tool_opened',
-    tool: toolName,
-    url: page.url(),
-    elements,
-    screenshot: await takeScreenshot(page, `tool-${toolName.replace(/\s/g, '-')}`),
+    status: 'ready_for_confirmation',
+    tool: tool.name,
+    tab: tool.tab,
+    url: tool.url,
+    frame_loaded: !!tool.frame,
+    params_filled: fill.filled,
+    params_not_found: fill.missing,
+    message: 'Tool opened. Review it in Flow and run it there (running a tool can use credits).',
+    screenshot: await takeScreenshot(page, `tool-${tool.name.replace(/\W+/g, '-')}-setup`),
   };
 }

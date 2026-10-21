@@ -29,6 +29,7 @@ export async function handleCreateScene(args) {
   await ensureProjectInContext(page, {
     name: args.project_name,
     campaign: args.campaign,
+    project_id: args.project_id,
   });
 
   await navigateToSidebar(page, 'Scenes');

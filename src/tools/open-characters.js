@@ -1,44 +1,43 @@
-import { logger } from '../utils/logger.js';
 import { getPage } from '../browser/connect.js';
 import { takeScreenshot } from '../utils/screenshots.js';
-import { detectPageElements } from '../browser/safe-actions.js';
-import { ensureProjectInContext, extractProjectId, buildProjectUrl } from '../navigation/project-navigator.js';
+import { ensureProjectInContext, navigateToSidebar } from '../navigation/project-navigator.js';
+import { openMentionPopup, closeMentionPopup } from '../navigation/mentions.js';
 
 /**
- * Open the Characters page for the current/target project.
- *
- * NOTE: "https://labs.google/fx/tools/flow/characters" (no project ID) is
- * NOT a valid page — Flow shows "There doesn't seem to be anything here."
- * The Characters page only exists scoped to a project:
- * "https://labs.google/fx/tools/flow/project/{projectId}/characters"
+ * Open the character page (/project/{id}/character) and list the project's
+ * existing characters via the "@" asset picker's Characters tab.
  */
 export async function handleOpenCharacters(args = {}) {
   const page = getPage();
+  await ensureProjectInContext(page, { name: args.project_name, campaign: args.campaign, project_id: args.project_id });
 
-  const project = await ensureProjectInContext(page, {
-    name: args.project_name,
-    campaign: args.campaign,
-  });
-
-  const projectId = extractProjectId(project.url);
-  if (!projectId) {
-    throw new Error(`Could not determine project ID from URL: ${project.url}`);
+  // List existing characters from the project page's "@" picker.
+  let characters = [];
+  const prompt = page.locator('[role="textbox"][aria-label="What do you want to create?"]').first();
+  if (await prompt.isVisible({ timeout: 8000 }).catch(() => false)) {
+    const popup = await openMentionPopup(page, prompt);
+    if (popup) {
+      const tab = page.locator('.cdk-overlay-container').getByText(/^\s*Characters\s*$/).first();
+      if (await tab.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await tab.click();
+        await page.waitForTimeout(1000);
+      }
+      characters = (await page.locator('.cdk-overlay-container [role="option"]').allTextContents())
+        .map(t => t.replace(/\s+/g, ' ').trim().replace(/\s*Character$/, ''))
+        .filter(Boolean);
+      await closeMentionPopup(page, prompt);
+    }
   }
 
-  const charactersUrl = `${buildProjectUrl('https://labs.google/fx/tools/flow', projectId)}/characters`;
-  logger.info('Opening Characters page', { charactersUrl });
-
-  await page.goto(charactersUrl, { waitUntil: 'networkidle', timeout: 30000 });
-  await page.waitForTimeout(2000);
-
-  const elements = await detectPageElements();
-  const screenshot = await takeScreenshot(page, 'characters-page');
+  await navigateToSidebar(page, 'Characters');
+  const archetypes = (await page.locator('button').filter({ hasText: /^\s*The [A-Z]/ }).allTextContents())
+    .map(t => t.replace(/\s+/g, ' ').trim().split(' ').slice(0, 2).join(' '));
 
   return {
     status: 'opened',
     url: page.url(),
-    title: await page.title(),
-    elements,
-    screenshot,
+    characters,
+    archetypes,
+    screenshot: await takeScreenshot(page, 'characters-page'),
   };
 }

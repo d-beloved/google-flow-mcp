@@ -1,75 +1,30 @@
-import { logger } from '../utils/logger.js';
 import { getPage } from '../browser/connect.js';
 import { takeScreenshot } from '../utils/screenshots.js';
-import { detectPageElements } from '../browser/safe-actions.js';
-import { ensureProjectInContext, navigateToSidebar } from '../navigation/project-navigator.js';
+import { listTools, openToolByName } from '../navigation/tools.js';
 
-export async function handleOpenToolsGallery() {
+/** Open the Tools gallery and list tools in each tab. */
+export async function handleOpenToolsGallery(args = {}) {
   const page = getPage();
-  await navigateToSidebar(page, 'Tools');
-  await page.waitForTimeout(2000);
-
-  const elements = await detectPageElements(page);
-  const screenshot = await takeScreenshot(page, 'tools-section');
-
+  const tools = await listTools(page, { name: args.project_name, project_id: args.project_id });
   return {
     status: 'opened',
     url: page.url(),
-    title: await page.title(),
-    elements,
-    screenshot,
+    tools,
+    screenshot: await takeScreenshot(page, 'tools-gallery'),
   };
 }
 
-export async function handleListTools() {
-  const page = getPage();
-  await navigateToSidebar(page, 'Tools');
-  await page.waitForTimeout(2000);
-
-  const elements = await detectPageElements(page);
-
-  return {
-    tools_found: elements,
-    screenshot: await takeScreenshot(page, 'tools-section'),
-  };
+export async function handleListTools(args = {}) {
+  return handleOpenToolsGallery(args);
 }
 
-export async function handleOpenTool(args) {
+export async function handleOpenTool(args = {}) {
   const page = getPage();
-  const toolName = args.name || args.tool_name;
-
-  if (!toolName) {
-    throw new Error('Tool name is required');
-  }
-
-  logger.info('Opening tool', { toolName, projectName: args.project_name });
-
-  await navigateToSidebar(page, 'Tools');
-  await page.waitForTimeout(2000);
-
-  // Try to find and click the tool within the project's tools section
-  const toolLocator = page.locator(
-    `a:has-text("${toolName}"), button:has-text("${toolName}"), text="${toolName}"`
-  ).first();
-  if (await toolLocator.isVisible().catch(() => false)) {
-    await toolLocator.click();
-    await page.waitForTimeout(3000);
-  } else {
-    logger.warn('Tool not found in sidebar, trying direct URL');
-    const toolSlug = toolName.toLowerCase().replace(/\s+/g, '-');
-    await page.goto(`https://labs.google/fx/tools/flow/tools/${toolSlug}`, {
-      waitUntil: 'networkidle',
-      timeout: 30000,
-    });
-    await page.waitForTimeout(2000);
-  }
-
-  const elements = await detectPageElements(page);
+  const name = args.name || args.tool_name;
+  if (!name) throw new Error('Tool name is required');
+  const tool = await openToolByName(page, name, { name: args.project_name, project_id: args.project_id, tab: args.tab });
   return {
-    status: 'opened',
-    tool: toolName,
-    url: page.url(),
-    elements,
-    screenshot: await takeScreenshot(page, `tool-${toolName.replace(/\s/g, '-')}`),
+    status: 'opened', tool: tool.name, tab: tool.tab, url: tool.url, frame_loaded: !!tool.frame,
+    screenshot: await takeScreenshot(page, `tool-${tool.name.replace(/\W+/g, '-')}`),
   };
 }

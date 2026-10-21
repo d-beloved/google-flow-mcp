@@ -31,5 +31,7 @@ export function get(key, fallback = undefined) {
 }
 
 export function getFlowHome() {
-  return config.flowHome || FLOW_HOME;
+  // Relative flowHome (e.g. ".") is resolved against the project root,
+  // not process.cwd(). MCP clients often launch the server with cwd "/".
+  return config.flowHome ? path.resolve(FLOW_HOME, config.flowHome) : FLOW_HOME;
 }

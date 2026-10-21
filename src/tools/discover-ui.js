@@ -34,29 +34,20 @@ function saveSelectors(map) {
   logger.info('Selectors map saved');
 }
 
-// "characters" is NOT a standalone page — Flow shows
-// "There doesn't seem to be anything here" for
-// https://labs.google/fx/tools/flow/characters (no project ID).
-// It only exists scoped to a project:
-// https://labs.google/fx/tools/flow/project/{projectId}/characters
-// Resolved at runtime in handleDiscoverUi via ensureProjectInContext.
-const PROJECT_SUBROUTE_PAGES = ['characters'];
+// flow.google.com (2026-10-21): project sub-routes are /character, /tools,
+// /trash; Images/Scenes/All media are sidebar filters on the project page.
+const PROJECT_SUBROUTE_PAGES = { characters: 'character', toolsGallery: 'tools', trash: 'trash' };
 
-// "scenes" (and "images"/"all-media") are NOT separate routes — they are
-// sidebar tabs within the project's main page (same URL, no suffix).
-// Resolved by navigating to the project then clicking the matching tab.
 const PROJECT_TAB_PAGES = {
   scenes: 'Scenes',
   images: 'Images',
-  'all-media': 'All Media',
+  'all-media': 'All media',
+  imageGeneration: 'All media',
+  videoGeneration: 'All media',
 };
 
 const PAGES = {
-  main: 'https://labs.google/fx/tools/flow',
-  toolsGallery: 'https://labs.google/fx/tools/flow/tools?tab=GALLERY',
-  gridArchitect: 'https://labs.google/fx/tools/flow/tools/grid-architect',
-  imageGeneration: 'https://labs.google/fx/tools/flow',
-  videoGeneration: 'https://labs.google/fx/tools/flow',
+  main: 'https://flow.google.com/',
 };
 
 const PAGE_SELECTOR_KEYS = {
@@ -64,6 +55,9 @@ const PAGE_SELECTOR_KEYS = {
   characters: 'characters',
   scenes: 'scenes',
   'tools-gallery': 'toolsGallery',
+  tools: 'toolsGallery',
+  trash: 'trash',
+  bin: 'trash',
   'tools gallery': 'toolsGallery',
   grid: 'gridArchitect',
   'grid-architect': 'gridArchitect',
@@ -85,14 +79,18 @@ export async function handleDiscoverUi(args) {
   let tabToClick = null;
 
   if (!url) {
-    if (PROJECT_SUBROUTE_PAGES.includes(pageKey)) {
+    if (pageKey === 'gridArchitect') {
+      const { openToolByName } = await import('../navigation/tools.js');
+      await openToolByName(page, 'Grid Architect', { name: args.project_name, campaign: args.campaign, tab: 'Templates' });
+      url = page.url();
+    } else if (PROJECT_SUBROUTE_PAGES[pageKey]) {
       const project = await ensureProjectInContext(page, {
         name: args.project_name,
         campaign: args.campaign,
       });
       const projectId = extractProjectId(project.url);
       url = projectId
-        ? `${buildProjectUrl('https://labs.google/fx/tools/flow', projectId)}/${pageKey}`
+        ? `${buildProjectUrl(null, projectId)}/${PROJECT_SUBROUTE_PAGES[pageKey]}`
         : project.url;
     } else if (PROJECT_TAB_PAGES[pageKey]) {
       const project = await ensureProjectInContext(page, {
@@ -110,7 +108,7 @@ export async function handleDiscoverUi(args) {
 
   try {
     // Navigate to the page
-    await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+    await page.goto(url, { waitUntil: 'load', timeout: 30000 });
     await page.waitForTimeout(3000);
 
     // For sidebar-tab pages (Scenes/Images/All Media), click the tab —

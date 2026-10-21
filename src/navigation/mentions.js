@@ -18,8 +18,8 @@ import { typeLikeHuman } from '../browser/safe-actions.js';
 //  insertMentionReference() handles both automatically.
 
 const SEARCH_INPUT_SELECTORS = [
+  '.cdk-overlay-container input[aria-label="Search assets"]',
   'input[placeholder*="Search assets" i]',
-  'input[placeholder*="Search" i]:visible',
 ];
 
 const ADD_TO_PROMPT_SELECTORS = [
@@ -27,14 +27,10 @@ const ADD_TO_PROMPT_SELECTORS = [
   'button:has-text("Add to prompt")',
 ];
 
+// Asset picker rows (flow.google.com, 2026-10-21): buttons with role=option
+// inside the overlay, text "<name> <Type>" e.g. "Figure crossing cyberpunk street Image".
 const RESULT_ITEM_SELECTORS = [
-  '[role="listitem"]',
-  '[role="option"]',
-  '[role="button"]',
-  '[class*="asset-item"]',
-  '[class*="media-item"]',
-  '[class*="grid"] > div',
-  'li',
+  '.cdk-overlay-container [role="option"]',
 ];
 
 // Result rows render as "<title><type label>" concatenated with no
@@ -173,17 +169,7 @@ export async function insertMentionReference(page, inputLocator, name) {
 
   // Fallback: names are often truncated ("Cat wearing space suit fl...")
   // — if no exact match, click the first visible result row.
-  if (!itemClicked) {
-    for (const sel of RESULT_ITEM_SELECTORS) {
-      const item = page.locator(sel).first();
-      if (await item.isVisible().catch(() => false)) {
-        await item.click();
-        itemClicked = true;
-        logger.warn('No exact match, clicked first result row', { name, selector: sel });
-        break;
-      }
-    }
-  }
+  // No blind fallback: picking the wrong asset would silently change a paid generation.
 
   if (!itemClicked) {
     await takeScreenshot(page, 'mention-item-not-found');
