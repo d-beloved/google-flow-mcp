@@ -6,6 +6,7 @@ import { takeScreenshot } from '../utils/screenshots.js';
 import { configureGenerationUI, typeLikeHuman } from '../browser/safe-actions.js';
 import { saveMetadata } from '../utils/file-manager.js';
 import { listMedia, waitForNewMedia, downloadMedia, clearPromptIngredients, addMediaToPrompt } from '../browser/media.js';
+import { scrollGridToTop, animateFromTile } from '../browser/media.js';
 import { ensureProjectInContext } from '../navigation/project-navigator.js';
 import { insertMentionReferences } from '../navigation/mentions.js';
 import { get } from '../utils/config.js';
@@ -60,9 +61,18 @@ export async function handleGenerateVideo(args) {
     }
     const qty = Math.min(Math.max(args.quantity || 1, 1), 4);
 
+    // Image-to-video: start from an existing still (tile menu → Animate → Frames).
+    let startFrame = null;
+    if (args.start_frame) {
+      const sf = args.start_frame;
+      const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(sf);
+      startFrame = await animateFromTile(page, isId ? { id: sf } : { title: sf });
+      logger.info('Start frame set via Animate', { start_frame: sf, title: startFrame.title });
+    }
+
     const config = await configureGenerationUI({
       mode: 'Video', ratio, model, duration, quantity: qty,
-      videoInput: args.video_input || 'Ingredients',
+      videoInput: args.start_frame ? 'Frames' : (args.video_input || 'Ingredients'),
       resolution: args.resolution || null,
     });
 
@@ -108,6 +118,7 @@ export async function handleGenerateVideo(args) {
       credit_cost: config.creditCost?.credits ?? null, credit_cost_text: config.creditCost?.text ?? null,
       ingredients_inserted: mentionResults.inserted, ingredients_failed: mentionResults.failed,
       reference_media_attached: refsAttached, reference_media_failed: refsFailed,
+      start_frame: startFrame ? { id: startFrame.id, title: startFrame.title } : null,
     };
 
     if (!autoConfirm) {
@@ -123,7 +134,8 @@ export async function handleGenerateVideo(args) {
       await takeScreenshot(page, 'video-generate-disabled');
       throw new FlowError(ErrorCodes.GENERATION_BUTTON_DISABLED, 'Generate button is disabled.');
     }
-    const beforeIds = await listMedia(page); // full list: count-based detection
+    await scrollGridToTop(page);
+    const beforeIds = await listMedia(page); // tiles at the top before Generate
     logger.info('⚠️ Clicking Generate for VIDEO — credits will be consumed', { model, duration, qty });
     await generateBtn.click();
 

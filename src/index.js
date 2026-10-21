@@ -113,6 +113,7 @@ const TOOL_DEFINITIONS = [
         duration: { type: 'string', description: '4s, 6s, 8s or 10s, where the model offers a choice. Veo 3.1 - Lite is fixed (8s). Omit to keep the model setting.' },
         resolution: { type: 'string', description: '720p or 360p, where offered. Omit to keep the model setting.' },
         video_input: { type: 'string', description: '"Ingredients" (default) or "Frames".', default: 'Ingredients' },
+        start_frame: { type: 'string', description: 'Image-to-video: media id or exact title of a still to use as the first frame (tile menu → Animate; sets Frames mode).' },
         quantity: { type: 'number', description: 'Videos per run, 1–4.', default: 1 },
         download: { type: 'string', description: 'Optional: download each new video when done: "720p", "1080p" (upscaled) or "270p" (GIF). Omit to skip.' },
         reference_media: { type: 'array', items: { type: 'string' }, description: 'Project items to attach as references via their tile menu ("Add to prompt"): media ids from earlier results, or exact tile titles. Safer than ingredients when titles repeat.' },
@@ -142,6 +143,37 @@ const TOOL_DEFINITIONS = [
         project_id: { type: 'string', description: 'Open this project ID first.' },
       },
     },
+  },
+  {
+    name: 'flow_batch_start',
+    description: '⚠️ CONSUMES CREDITS. Run a manifest of image/video generations in the background, one at a time, and return at once. Each item: { label, type: "image"|"video", prompt, ingredients?, model?, ratio?, duration?, download?, start_frame_label? (video: label of an earlier image item in the batch, used as the first frame via Animate) }. Results are downloaded and renamed to <label>.<ext> in outputs/<name>/. Poll with flow_batch_status.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', description: 'Path to a manifest JSON (absolute, or relative to the server folder). Manifest: { name, project_name, defaults: { image: {...}, video: {...} }, items: [...] }.' },
+        manifest: { type: 'object', description: 'Inline manifest instead of file.' },
+        only: { type: 'array', items: { type: 'string' }, description: 'Run only these labels.' },
+        types: { type: 'array', items: { type: 'string' }, description: 'Run only these types, e.g. ["image"].' },
+        project_name: { type: 'string', description: 'Override the manifest project.' },
+        stop_on_error: { type: 'boolean', description: 'Stop at the first failed item (default false: record and continue).' },
+      },
+    },
+  },
+  {
+    name: 'flow_batch_status',
+    description: 'Progress of a background batch: done / failed / running / pending, credits reported by Flow, output folder.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        batch_id: { type: 'string', description: 'Batch id (default: the latest batch).' },
+        details: { type: 'boolean', description: 'Include per-item status, titles and files.', default: false },
+      },
+    },
+  },
+  {
+    name: 'flow_batch_cancel',
+    description: 'Stop a running batch after the current item finishes.',
+    inputSchema: { type: 'object', properties: { batch_id: { type: 'string' } } },
   },
   {
     name: 'flow_list_projects',
@@ -373,6 +405,21 @@ async function handleToolCall(name, args) {
     case 'flow_generate_video': {
       const result = await handleGenerateVideo(args);
       return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+    }
+
+    case 'flow_batch_start': {
+      const { handleBatchStart } = await import('./tools/batch.js');
+      return { content: [{ type: 'text', text: JSON.stringify(await handleBatchStart(args || {}), null, 2) }] };
+    }
+
+    case 'flow_batch_status': {
+      const { handleBatchStatus } = await import('./tools/batch.js');
+      return { content: [{ type: 'text', text: JSON.stringify(await handleBatchStatus(args || {}), null, 2) }] };
+    }
+
+    case 'flow_batch_cancel': {
+      const { handleBatchCancel } = await import('./tools/batch.js');
+      return { content: [{ type: 'text', text: JSON.stringify(await handleBatchCancel(args || {}), null, 2) }] };
     }
 
     case 'flow_list_projects': {

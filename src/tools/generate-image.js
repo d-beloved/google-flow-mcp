@@ -5,6 +5,7 @@ import { FlowError, ErrorCodes } from '../utils/errors.js';
 import { takeScreenshot } from '../utils/screenshots.js';
 import { saveMetadata } from '../utils/file-manager.js';
 import { listMedia, waitForNewMedia, downloadMedia, clearPromptIngredients, addMediaToPrompt } from '../browser/media.js';
+import { scrollGridToTop, animateFromTile } from '../browser/media.js';
 import { ensureProjectInContext } from '../navigation/project-navigator.js';
 import { insertMentionReferences } from '../navigation/mentions.js';
 import { get } from '../utils/config.js';
@@ -275,7 +276,8 @@ export async function handleGenerateImage(args) {
     }
 
     // Snapshot existing media so we can spot the new result(s).
-    const beforeIds = await listMedia(page); // full list: count-based detection
+    await scrollGridToTop(page);
+    const beforeIds = await listMedia(page); // tiles at the top before Generate
 
     // STEP 10: Click generate ⚠️ CREDITS WILL BE CONSUMED
     logger.info('⚠️⚠️⚠️ Clicking Generate — credits will be consumed');

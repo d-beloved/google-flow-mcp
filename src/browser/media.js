@@ -42,33 +42,41 @@ export async function listMedia(page) {
 }
 
 async function tileLocator(page, mediaId) {
-  const media = await listMedia(page);
-  const m = media.find(x => x.id === mediaId);
+  let m = (await listMedia(page)).find(x => x.id === mediaId);
+  if (!m && !String(mediaId).startsWith('thumb:')) m = await findTile(page, { id: mediaId });
   return m ? { loc: page.locator(TILE).nth(m.index), media: m } : null;
 }
 
+const SCROLLER = '.cdk-virtual-scrollable.page-container';
+
+/** Scroll the (virtual) media grid to the top so the newest tiles are rendered. */
+export async function scrollGridToTop(page) {
+  await page.evaluate((sel) => { const sc = document.querySelector(sel); if (sc) sc.scrollTop = 0; }, SCROLLER).catch(() => {});
+  await page.waitForTimeout(400);
+}
+
+// Stable identity: image media id, else type + title (video thumbnails are signed URLs).
+const stableKey = m => (m.id && !m.id.startsWith('thumb:') && !m.id.startsWith('tile:')) ? m.id : `${m.type}|${m.title}`;
+
 /**
- * Wait until `count` new, loaded tiles appear. Flow inserts new results at the
- * top of the grid, so the new tiles are the first (now - before) tiles. This is
- * count-based on purpose: thumbnail URLs are signed and can change on re-render,
- * so comparing keys alone can mistake an old tile for a new one.
- * `before` is the listMedia() array (or ids) captured before clicking Generate.
+ * Wait until `count` new, loaded tiles appear at the top of the grid.
+ * The grid is a CDK virtual scroller (only ~20-30 tiles are in the DOM), so we
+ * can't diff the whole project. New results are inserted at the top: the new
+ * tiles are those rendered before the first tile we saw before clicking Generate.
+ * `before` is the listMedia() array captured (at scroll top) before Generate.
  */
 export async function waitForNewMedia(page, before, { count = 1, timeoutMs = 180000, type } = {}) {
-  const beforeCount = Array.isArray(before) ? before.length : 0;
-  const beforeKeys = new Set((before || []).map(b => (typeof b === 'string' ? b : b.id)));
+  const beforeKeys = new Set((before || []).map(b => (typeof b === 'string' ? b : stableKey(b))));
   const start = Date.now();
   let lastLog = 0;
   while (Date.now() - start < timeoutMs) {
+    await scrollGridToTop(page);
     const media = await listMedia(page).catch(() => []);
-    const added = Math.max(0, media.length - beforeCount);
-    const fresh = media.slice(0, added)
-      .filter(m => !type || m.type === type)
-      .filter(m => !beforeKeys.has(m.id) || m.id.startsWith('thumb:'));
+    const firstOld = media.findIndex(m => beforeKeys.has(stableKey(m)));
+    const fresh = (firstOld === -1 ? (beforeKeys.size ? [] : media) : media.slice(0, firstOld))
+      .filter(m => !type || m.type === type);
     const ready = fresh.filter(m => m.ready);
-    if (ready.length >= count) {
-      return ready.slice(0, count);
-    }
+    if (ready.length >= count) return ready.slice(0, count);
 
     const failed = await page.evaluate(() => {
       const t = document.body.innerText;
@@ -81,18 +89,41 @@ export async function waitForNewMedia(page, before, { count = 1, timeoutMs = 180
     }
     if (Date.now() - lastLog > 30000) {
       lastLog = Date.now();
-      logger.info('Waiting for new media', {
-        elapsedS: Math.round((Date.now() - start) / 1000), tilesBefore: beforeCount, tilesNow: media.length, ready: ready.length,
-      });
+      logger.info('Waiting for new media', { elapsedS: Math.round((Date.now() - start) / 1000), fresh: fresh.length, ready: ready.length });
     }
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(2000);
   }
-  const media = await listMedia(page).catch(() => []);
-  const partial = media.slice(0, Math.max(0, media.length - beforeCount)).filter(m => m.ready && (!type || m.type === type));
-  if (partial.length) return partial;
   await takeScreenshot(page, 'generation-timeout');
   throw new FlowError(ErrorCodes.GENERATION_TIMEOUT,
     `No new media appeared within ${Math.round(timeoutMs / 1000)}s. Check the Flow project.`);
+}
+
+/**
+ * Bring a tile into the DOM by scrolling the virtual grid. Match by media id
+ * (images) or exact title. Returns the media entry (with .index) or null.
+ */
+export async function findTile(page, { id, title }) {
+  await scrollGridToTop(page);
+  for (let i = 0; i < 200; i++) {
+    const media = await listMedia(page).catch(() => []);
+    const m = media.find(x => (id && x.id === id) || (title && x.title === title));
+    if (m) {
+      await page.locator(TILE).nth(m.index).scrollIntoViewIfNeeded().catch(() => {});
+      await page.waitForTimeout(300);
+      const again = (await listMedia(page)).find(x => (id && x.id === id) || (title && x.title === title));
+      return again || m;
+    }
+    const atEnd = await page.evaluate((sel) => {
+      const sc = document.querySelector(sel);
+      if (!sc) return true;
+      const end = sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 4;
+      sc.scrollTop += Math.max(200, sc.clientHeight * 0.7);
+      return end;
+    }, SCROLLER);
+    await page.waitForTimeout(500);
+    if (atEnd) break;
+  }
+  return null;
 }
 
 async function snackbarText(page) {
@@ -228,7 +259,8 @@ export async function clearPromptIngredients(page) {
  */
 export async function addMediaToPrompt(page, idOrTitle) {
   const media = await listMedia(page);
-  const m = media.find(x => x.id === idOrTitle) || media.find(x => x.title === idOrTitle);
+  const m = media.find(x => x.id === idOrTitle) || media.find(x => x.title === idOrTitle)
+    || await findTile(page, { id: idOrTitle, title: idOrTitle });
   if (!m) return false;
   const count = () => page.locator('.prompt-ingredient-bar button[aria-label="Ingredient"]').count().catch(() => 0);
   const before = await count();
@@ -243,4 +275,25 @@ export async function addMediaToPrompt(page, idOrTitle) {
   await item.click();
   await page.waitForTimeout(800);
   return (await count()) > before;
+}
+
+/**
+ * Set a still as the video start frame: tile menu → "Animate". Flow switches the
+ * prompt bar to Video → Frames with the image in the start slot.
+ */
+export async function animateFromTile(page, { id, title }) {
+  const m = await findTile(page, { id, title });
+  if (!m) throw new FlowError(ErrorCodes.FLOW_PAGE_NOT_FOUND, `Start-frame image not found: ${id || title}`);
+  const tile = page.locator(TILE).nth(m.index);
+  await tile.click({ button: 'right' });
+  const item = page.locator(MENU_ITEM).filter({ hasText: /Animate$/ }).first();
+  if (!(await item.isVisible({ timeout: 4000 }).catch(() => false))) {
+    await page.keyboard.press('Escape');
+    throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE, 'Tile menu has no "Animate" item.');
+  }
+  await item.click();
+  await page.waitForTimeout(1500);
+  const chip = await page.locator('button[aria-label="Settings trigger"]').first().textContent().catch(() => '');
+  if (!/Video/.test(chip || '')) throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE, `Animate did not switch to Video mode (chip: "${chip}").`);
+  return m;
 }
