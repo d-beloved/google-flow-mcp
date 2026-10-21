@@ -23,7 +23,7 @@ export async function handleDownloadLatest(args = {}) {
   await page.locator('flow-grid-tile-container').first().waitFor({ state: 'visible', timeout: 15000 }).catch(() => {});
   // The grid is virtual and may be scrolled; "latest" means the top of the grid.
   await scrollGridToTop(page);
-  if (args.media_id && !(await listMedia(page)).some(m => m.id === args.media_id)) {
+  if (args.media_id && !(await listMedia(page)).some(m => m.id.startsWith(args.media_id))) {
     await findTile(page, { id: args.media_id });
   }
   if (args.title) {
@@ -34,7 +34,7 @@ export async function handleDownloadLatest(args = {}) {
 
   let media = (await listMedia(page)).filter(m => m.ready);
   if (args.type) media = media.filter(m => m.type === args.type);
-  if (args.media_id) media = media.filter(m => m.id === args.media_id);
+  if (args.media_id) media = media.filter(m => m.id === args.media_id || m.id.startsWith(args.media_id));
   if (!media.length) {
     throw new FlowError(ErrorCodes.DOWNLOAD_FAILED, 'No downloadable media found in this project.');
   }

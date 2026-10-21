@@ -121,11 +121,11 @@ export async function findTile(page, { id, title }) {
   await scrollGridToTop(page);
   for (let i = 0; i < 200; i++) {
     const media = await listMedia(page).catch(() => []);
-    const m = media.find(x => (id && x.id === id) || (title && x.title === title));
+    const m = media.find(x => (id && (x.id === id || (id.length >= 8 && x.id.startsWith(id)))) || (title && x.title === title));
     if (m) {
       await page.locator(TILE).nth(m.index).scrollIntoViewIfNeeded().catch(() => {});
       await page.waitForTimeout(300);
-      const again = (await listMedia(page)).find(x => (id && x.id === id) || (title && x.title === title));
+      const again = (await listMedia(page)).find(x => (id && (x.id === id || (id.length >= 8 && x.id.startsWith(id)))) || (title && x.title === title));
       return again || m;
     }
     const atEnd = await page.evaluate((sel) => {
