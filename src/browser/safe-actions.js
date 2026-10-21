@@ -344,8 +344,11 @@ async function overlaysOpen(page) {
   return page.evaluate(() => {
     const vis = e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0; };
     if (document.querySelector('.cdk-overlay-backdrop-showing')) return true;
+    // Snackbars ("Upscaling complete … Dismiss") live in a .cdk-overlay-pane too,
+    // but they don't block the page; never treat them as an open menu.
     return [...document.querySelectorAll('.cdk-overlay-popover, .cdk-overlay-pane')]
-      .some(e => vis(e) && (e.innerText || '').trim().length > 0);
+      .some(e => vis(e) && (e.innerText || '').trim().length > 0
+        && !e.querySelector('mat-snack-bar-container, .mat-mdc-snack-bar-container, simple-snack-bar'));
   }).catch(() => false);
 }
 
@@ -355,8 +358,10 @@ async function closeOverlays(page) {
     await page.keyboard.press('Escape');
     await page.waitForTimeout(350);
   }
-  // Last resort for the settings popover: toggle its trigger.
-  if (await overlaysOpen(page)) {
+  // Last resort for the settings popover: toggle its trigger — only if it is
+  // actually the settings panel that is open, never blindly.
+  const settingsOpen = await page.locator(`${OVERLAY} button[role="radio"]`).first().isVisible().catch(() => false);
+  if (settingsOpen && await overlaysOpen(page)) {
     await page.locator(SETTINGS_TRIGGER).first().click().catch(() => {});
     await page.waitForTimeout(400);
   }

@@ -232,6 +232,9 @@ export async function downloadMedia(page, mediaId, { size = '2K', type = 'image'
     throw new FlowError(ErrorCodes.DOWNLOAD_FAILED,
       `Download did not finish within ${Math.round(timeoutMs / 1000)}s. Last Flow message: ${await snackbarText(page)}`);
   } finally {
+    // Dismiss Flow's "Upscaling complete" snackbar so it doesn't linger over the UI.
+    await page.locator('mat-snack-bar-container button, .mat-mdc-snack-bar-container button')
+      .filter({ hasText: /Dismiss/i }).first().click({ timeout: 1500 }).catch(() => {});
     page.off('download', onDownload);
     if (cdp) {
       await cdp.send('Browser.setDownloadBehavior', { behavior: 'default' }).catch(() => {});
