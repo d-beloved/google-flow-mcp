@@ -321,7 +321,9 @@ function escapeRe(s) {
 
 function normalizeLabel(s) {
   return (s || '')
-    .replace(/\b[a-z0-9]+(?:_[a-z0-9]+)+\b/g, '') // icon ligatures: arrow_drop_down, volume_up, crop_16_9
+    // Icon ligatures; textContent can glue them to labels ("volume_upVeo 3.1 - Fast").
+    .replace(/(arrow_drop_down|volume_up|chrome_extension|crop_(?:16_9|9_16|landscape|square|portrait|free))/g, ' ')
+    .replace(/\b[a-z0-9]+(?:_[a-z0-9]+)+\b/g, ' ')
     .replace(/[^\p{L}\p{N}\s.:-]/gu, '') // strip emoji / symbols
     .replace(/\s+/g, ' ')
     .trim()
