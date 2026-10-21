@@ -37,6 +37,24 @@ function load(id) {
   return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf-8')) : null;
 }
 
+/** Media id for a label: this batch first, then earlier batches with the same name (newest first). */
+function findLabelMedia(state, label) {
+  const hit = state.items.find(x => x.label === label && x.status === 'done' && x.media_ids?.length);
+  if (hit) return hit.media_ids[0];
+  if (!fs.existsSync(BATCH_DIR)) return null;
+  const files = fs.readdirSync(BATCH_DIR).filter(f => f.endsWith('.json'))
+    .map(f => path.join(BATCH_DIR, f)).sort((a, b) => fs.statSync(b).mtimeMs - fs.statSync(a).mtimeMs);
+  for (const f of files) {
+    try {
+      const old = JSON.parse(fs.readFileSync(f, 'utf-8'));
+      if (old.id === state.id || old.name !== state.name) continue;
+      const it = old.items?.find(x => x.label === label && x.status === 'done' && x.media_ids?.length);
+      if (it) return it.media_ids[0];
+    } catch { /* skip unreadable */ }
+  }
+  return null;
+}
+
 function safeName(s) {
   return String(s).replace(/[^\w.-]+/g, '_').slice(0, 80);
 }
@@ -75,11 +93,11 @@ async function runBatch(state) {
       let result;
       if (item.type === 'video') {
         if (item.start_frame_label) {
-          const src = state.items.find(x => x.label === item.start_frame_label);
-          if (!src || src.status !== 'done' || !src.media_ids?.length) {
-            throw new FlowError(ErrorCodes.INVALID_PARAMS, `Start frame ${item.start_frame_label} has not been generated in this batch.`);
+          const mediaId = findLabelMedia(state, item.start_frame_label);
+          if (!mediaId) {
+            throw new FlowError(ErrorCodes.INVALID_PARAMS, `Start frame ${item.start_frame_label} not found in this or earlier batches of "${state.name}".`);
           }
-          common.start_frame = src.media_ids[0];
+          common.start_frame = mediaId;
         }
         result = await handleGenerateVideo(common);
       } else {
