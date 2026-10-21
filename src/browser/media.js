@@ -30,8 +30,10 @@ export async function listMedia(page) {
     const img = idEl?.tagName === 'IMG' ? idEl : tile.querySelector('img.thumbnail, img');
     const src = img?.currentSrc || img?.src || '';
     const ready = !!img && img.complete && img.naturalWidth > 0;
+    const text = (tile.innerText || '').trim();
     return {
       id: idEl?.getAttribute('data-media-id') || (src ? `thumb:${src}` : `tile:${index}:${tile.getAttribute('aria-label') || ''}`),
+      failed: !img && /^\s*(warning\s*)?Failed\b/i.test(text) ? text.replace(/\s+/g, ' ').replace(/^warning /, '').slice(0, 120) : null,
       type: isVideo ? 'video' : 'image',
       title: tile.getAttribute('aria-label') || '',
       src,
@@ -77,6 +79,12 @@ export async function waitForNewMedia(page, before, { count = 1, timeoutMs = 180
       .filter(m => !type || m.type === type);
     const ready = fresh.filter(m => m.ready);
     if (ready.length >= count) return ready.slice(0, count);
+    // Flow shows a "Failed — Failed to load image" tile when a generation fails.
+    const failedTile = (firstOld === -1 ? media : media.slice(0, firstOld)).find(m => m.failed);
+    if (failedTile && ready.length < count) {
+      await takeScreenshot(page, 'generation-failed-tile');
+      throw new FlowError(ErrorCodes.GENERATION_TIMEOUT, `Flow: ${failedTile.failed}`);
+    }
 
     const failed = await page.evaluate(() => {
       const t = document.body.innerText;
