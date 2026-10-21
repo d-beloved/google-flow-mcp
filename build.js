@@ -3,9 +3,10 @@ import * as esbuild from 'esbuild';
 async function build() {
   try {
     await esbuild.build({
-      entryPoints: ['src/index.js'],
+      // index.js = supervisor, worker.js = Flow logic (forked by the supervisor)
+      entryPoints: ['src/index.js', 'src/worker.js'],
       bundle: true,
-      outfile: 'dist/index.js',
+      outdir: 'dist',
       format: 'esm',
       platform: 'node',
       target: 'node18',

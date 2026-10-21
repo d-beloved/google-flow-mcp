@@ -307,3 +307,18 @@ src/
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
+
+
+## Hot reload (no Claude restart)
+
+`src/index.js` is a small supervisor that keeps the MCP connection open and runs
+all Flow logic in a child worker (`src/worker.js`). After editing code:
+
+- call the `flow_reload` tool — it restarts the worker in about a second, keeps
+  Chrome open and reconnects the browser. It refuses while a batch is running
+  (pass `force: true` to kill the batch).
+- or set `FLOW_WATCH=1` in the server's env to reload automatically on file changes.
+
+New tools or changed tool options still need the client to re-read the tool list.
+The supervisor sends `notifications/tools/list_changed`; whether your client acts
+on it varies. `src/server-direct.js` is the old single-process server.
