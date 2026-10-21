@@ -4,6 +4,7 @@
 //     img|video[data-media-id="<uuid>"]
 //   Context menu: Favourite, Reuse prompt, Animate, Add to prompt, Download ▸, ...
 //   Download ▸ (images): "1K Original size", "2K Upscaled", "4K Upscaled"
+//   Download ▸ (videos): "270p Animated GIF", "720p Original size", "1080p Upscaled", "4K Upscaled" (plan-gated)
 //   Upscaling shows a snackbar "Upscaling your image. Download will start
 //   automatically." then "Upscaling complete. Your image has been downloaded!"
 
@@ -17,20 +18,33 @@ import { FlowError, ErrorCodes } from '../utils/errors.js';
 
 const MENU_ITEM = '.cdk-overlay-container [role="menuitem"]';
 
-/** All media on the page, in DOM order (newest first in the default grid). */
+// Image tiles carry img[data-media-id]; video tiles (flow-video-tile) don't —
+// they only have img.thumbnail. Key = media id, else "thumb:<thumbnail src>".
+const TILE = 'flow-grid-tile-container';
+
+/** All media tiles on the page, in DOM order (newest first in the default grid). */
 export async function listMedia(page) {
-  return page.evaluate(() => [...document.querySelectorAll('[data-media-id]')].map(el => {
-    const tile = el.closest('flow-grid-tile-container');
-    const isVideo = el.tagName === 'VIDEO';
-    const ready = isVideo ? (el.readyState >= 1 || !!el.poster) : (el.complete && el.naturalWidth > 0);
+  return page.evaluate((TILE) => [...document.querySelectorAll(TILE)].map((tile, index) => {
+    const idEl = tile.querySelector('[data-media-id]');
+    const isVideo = !!tile.querySelector('flow-video-tile');
+    const img = idEl?.tagName === 'IMG' ? idEl : tile.querySelector('img.thumbnail, img');
+    const src = img?.currentSrc || img?.src || '';
+    const ready = !!img && img.complete && img.naturalWidth > 0;
     return {
-      id: el.getAttribute('data-media-id'),
+      id: idEl?.getAttribute('data-media-id') || (src ? `thumb:${src}` : `tile:${index}:${tile.getAttribute('aria-label') || ''}`),
       type: isVideo ? 'video' : 'image',
-      title: tile?.getAttribute('aria-label') || '',
-      src: el.currentSrc || el.src || '',
+      title: tile.getAttribute('aria-label') || '',
+      src,
       ready,
+      index,
     };
-  }).filter((m, i, a) => a.findIndex(x => x.id === m.id) === i));
+  }).filter((m, i, a) => a.findIndex(x => x.id === m.id) === i), TILE);
+}
+
+async function tileLocator(page, mediaId) {
+  const media = await listMedia(page);
+  const m = media.find(x => x.id === mediaId);
+  return m ? { loc: page.locator(TILE).nth(m.index), media: m } : null;
 }
 
 /** Wait until `count` new, loaded media tiles appear that weren't in `beforeIds`. */
@@ -81,11 +95,13 @@ function snapshotDir(dir) {
  * pass the label prefix Flow shows (e.g. "720p"); omit to take the first option.
  * Returns { path, filename, size, mediaId }.
  */
-export async function downloadMedia(page, mediaId, { size = '2K', type = 'image', timeoutMs = 180000 } = {}) {
-  const tile = page.locator(`flow-grid-tile-container:has([data-media-id="${mediaId}"])`).first();
-  if (!(await tile.isVisible({ timeout: 10000 }).catch(() => false))) {
+export async function downloadMedia(page, mediaId, { size = '2K', type = 'image', timeoutMs = 300000 } = {}) {
+  const found = await tileLocator(page, mediaId);
+  if (!found || !(await found.loc.isVisible({ timeout: 10000 }).catch(() => false))) {
     throw new FlowError(ErrorCodes.DOWNLOAD_FAILED, `Media ${mediaId} is not visible in this project.`);
   }
+  const tile = found.loc;
+  type = found.media.type || type;
 
   const outDir = getOutputDir(type);
   const before = snapshotDir(outDir);
@@ -124,7 +140,13 @@ export async function downloadMedia(page, mediaId, { size = '2K', type = 'image'
     const panel = page.locator('.cdk-overlay-container [role="menu"]').last();
     const options = panel.locator('[role="menuitem"]');
     const optLabels = (await options.allTextContents()).map(t => t.replace(/\s+/g, ' ').trim());
-    const idx = sizeRe ? optLabels.findIndex(t => sizeRe.test(t)) : 0;
+    const disabled = await options.evaluateAll(els => els.map(e => e.getAttribute('aria-disabled') === 'true' || e.disabled));
+    const idx = sizeRe ? optLabels.findIndex(t => sizeRe.test(t)) : disabled.findIndex(d => !d);
+    if (idx >= 0 && disabled[idx]) {
+      await page.keyboard.press('Escape'); await page.keyboard.press('Escape');
+      throw new FlowError(ErrorCodes.DOWNLOAD_FAILED,
+        `"${optLabels[idx]}" is greyed out for this account. Enabled: ${optLabels.filter((_, i) => !disabled[i]).join(', ')}`);
+    }
     if (idx < 0) {
       await page.keyboard.press('Escape'); await page.keyboard.press('Escape');
       throw new FlowError(ErrorCodes.DOWNLOAD_FAILED,

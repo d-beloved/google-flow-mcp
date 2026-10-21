@@ -32,7 +32,7 @@ export async function handleDownloadLatest(args = {}) {
   const results = [];
   const errors = [];
   for (const m of targets) {
-    const size = args.size || (m.type === 'image' ? get('defaultImageDownload', '2K') : undefined);
+    const size = args.size || (m.type === 'image' ? get('defaultImageDownload', '2K') : get('defaultVideoDownload', '720p'));
     try {
       results.push({ ...(await downloadMedia(page, m.id, { size, type: m.type })), title: m.title, type: m.type });
     } catch (e) {

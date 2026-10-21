@@ -62,5 +62,6 @@
     "720p",
     "360p"
   ],
-  "defaultImageDownload": "2K"
+  "defaultImageDownload": "2K",
+  "defaultVideoDownload": "720p"
 }

@@ -112,7 +112,7 @@ const TOOL_DEFINITIONS = [
         resolution: { type: 'string', description: '720p or 360p, where offered. Omit to keep the model setting.' },
         video_input: { type: 'string', description: '"Ingredients" (default) or "Frames".', default: 'Ingredients' },
         quantity: { type: 'number', description: 'Videos per run, 1–4.', default: 1 },
-        download: { type: 'string', description: 'Optional: download each new video after it finishes, using the label prefix of a Flow download option (e.g. "720p"). Omit to skip.' },
+        download: { type: 'string', description: 'Optional: download each new video when done: "720p", "1080p" (upscaled) or "270p" (GIF). Omit to skip.' },
         ingredients: { type: 'array', items: { type: 'string' }, description: 'Names of project assets to reference via "@name".' },
         use_character: { type: 'string', description: 'Character name to reference via "@name".' },
         use_scene: { type: 'string', description: 'Scene name to reference via "@name".' },
@@ -130,7 +130,7 @@ const TOOL_DEFINITIONS = [
     inputSchema: {
       type: 'object',
       properties: {
-        size: { type: 'string', description: 'Images: "1K", "2K" (default) or "4K". Videos: a download option label prefix; omit for the first option.' },
+        size: { type: 'string', description: 'Images: "1K", "2K" (default) or "4K". Videos: "270p" (GIF), "720p" (default), "1080p" (upscaled) or "4K" (plan-gated).' },
         count: { type: 'number', description: 'How many of the newest items to download.', default: 1 },
         media_id: { type: 'string', description: 'Download this specific item (media id from a generate result).' },
         type: { type: 'string', description: '"image" or "video" — only consider that type.' },
