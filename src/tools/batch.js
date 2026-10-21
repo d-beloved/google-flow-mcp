@@ -94,7 +94,10 @@ async function runBatch(state) {
       item.files = (result.downloads || []).map((dl, i) =>
         moveDownload(dl, outDir, result.downloads.length > 1 ? `${item.label}_${i + 1}` : item.label));
       item.download_errors = result.download_errors || [];
-      if (item.ingredients_failed?.length) item.warning = `References not attached: ${item.ingredients_failed.join(', ')}`;
+      const warns = [];
+      if (item.ingredients_failed?.length) warns.push(`References not attached: ${item.ingredients_failed.join(', ')}`);
+      if (item.download_errors.length) warns.push(`Download failed: ${item.download_errors.map(e => e.error).join('; ').slice(0, 200)}`);
+      if (warns.length) item.warning = warns.join(' | ');
     } catch (e) {
       item.status = 'failed';
       item.error = e.message;

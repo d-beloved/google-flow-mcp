@@ -221,11 +221,19 @@ export async function downloadMedia(page, mediaId, { size = '2K', type = 'image'
         }
         return { path: file, filename: added[0], size: optLabels[idx], mediaId };
       }
-      if (pwDownload) {
+      // Fallback only: if Chrome's own download (redirected by CDP above) hasn't
+      // shown up after a while, try Playwright's copy. Never fail on it — the
+      // CDP path usually wins and Playwright's temp file is then missing.
+      if (pwDownload && Date.now() - start > 20000) {
         const name = pwDownload.suggestedFilename() || `${mediaId}.${type === 'video' ? 'mp4' : 'png'}`;
         const file = path.join(outDir, name);
-        await pwDownload.saveAs(file);
-        return { path: file, filename: name, size: optLabels[idx], mediaId };
+        try {
+          await pwDownload.saveAs(file);
+          return { path: file, filename: name, size: optLabels[idx], mediaId };
+        } catch (e) {
+          logger.warn('Playwright download copy failed; still waiting for the Chrome download', { error: e.message });
+          pwDownload = null;
+        }
       }
     }
     await takeScreenshot(page, 'download-timeout');
