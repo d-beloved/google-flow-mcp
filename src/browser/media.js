@@ -32,7 +32,11 @@ export async function listMedia(page) {
     const ready = !!img && img.complete && img.naturalWidth > 0;
     const text = (tile.innerText || '').trim();
     return {
-      id: idEl?.getAttribute('data-media-id') || (src ? `thumb:${src}` : `tile:${index}:${tile.getAttribute('aria-label') || ''}`),
+      // Video thumbnails on flow-content.google carry a stable media uuid in the
+      // path (/image/<uuid>?Expires=...); older asb/ URLs are signed and unstable.
+      id: idEl?.getAttribute('data-media-id')
+        || ((src.match(/flow-content\.google\/[a-z]+\/([0-9a-f-]{36})/i) || [])[1] ? `vid:${src.match(/flow-content\.google\/[a-z]+\/([0-9a-f-]{36})/i)[1]}` : null)
+        || (src ? `thumb:${src}` : `tile:${index}:${tile.getAttribute('aria-label') || ''}`),
       failed: !img && /^\s*(warning\s*)?Failed\b/i.test(text) ? text.replace(/\s+/g, ' ').replace(/^warning /, '').slice(0, 120) : null,
       type: isVideo ? 'video' : 'image',
       title: tile.getAttribute('aria-label') || '',
@@ -58,6 +62,9 @@ export async function scrollGridToTop(page) {
 }
 
 // Stable identity: image media id, else type + title (video thumbnails are signed URLs).
+// Identity: media id (images) or vid:<uuid> (videos); otherwise type + title + an
+// index-free fallback. Titles repeat (re-generations of the same prompt), so
+// they are only a last resort.
 const stableKey = m => (m.id && !m.id.startsWith('thumb:') && !m.id.startsWith('tile:')) ? m.id : `${m.type}|${m.title}`;
 
 /**
