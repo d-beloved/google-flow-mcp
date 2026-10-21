@@ -105,7 +105,7 @@ export async function handleGenerateVideo(args) {
       await takeScreenshot(page, 'video-generate-disabled');
       throw new FlowError(ErrorCodes.GENERATION_BUTTON_DISABLED, 'Generate button is disabled.');
     }
-    const beforeIds = (await listMedia(page)).map(m => m.id);
+    const beforeIds = await listMedia(page); // full list: count-based detection
     logger.info('⚠️ Clicking Generate for VIDEO — credits will be consumed', { model, duration, qty });
     await generateBtn.click();
 

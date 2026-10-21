@@ -256,7 +256,7 @@ export async function handleGenerateImage(args) {
     }
 
     // Snapshot existing media so we can spot the new result(s).
-    const beforeIds = (await listMedia(page)).map(m => m.id);
+    const beforeIds = await listMedia(page); // full list: count-based detection
 
     // STEP 10: Click generate ⚠️ CREDITS WILL BE CONSUMED
     logger.info('⚠️⚠️⚠️ Clicking Generate — credits will be consumed');

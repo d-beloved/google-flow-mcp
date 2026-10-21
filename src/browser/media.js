@@ -47,16 +47,28 @@ async function tileLocator(page, mediaId) {
   return m ? { loc: page.locator(TILE).nth(m.index), media: m } : null;
 }
 
-/** Wait until `count` new, loaded media tiles appear that weren't in `beforeIds`. */
-export async function waitForNewMedia(page, beforeIds, { count = 1, timeoutMs = 180000, type } = {}) {
-  const before = new Set(beforeIds);
+/**
+ * Wait until `count` new, loaded tiles appear. Flow inserts new results at the
+ * top of the grid, so the new tiles are the first (now - before) tiles. This is
+ * count-based on purpose: thumbnail URLs are signed and can change on re-render,
+ * so comparing keys alone can mistake an old tile for a new one.
+ * `before` is the listMedia() array (or ids) captured before clicking Generate.
+ */
+export async function waitForNewMedia(page, before, { count = 1, timeoutMs = 180000, type } = {}) {
+  const beforeCount = Array.isArray(before) ? before.length : 0;
+  const beforeKeys = new Set((before || []).map(b => (typeof b === 'string' ? b : b.id)));
   const start = Date.now();
-  let lastShot = 0;
+  let lastLog = 0;
   while (Date.now() - start < timeoutMs) {
-    const fresh = (await listMedia(page).catch(() => []))
-      .filter(m => !before.has(m.id) && (!type || m.type === type));
+    const media = await listMedia(page).catch(() => []);
+    const added = Math.max(0, media.length - beforeCount);
+    const fresh = media.slice(0, added)
+      .filter(m => !type || m.type === type)
+      .filter(m => !beforeKeys.has(m.id) || m.id.startsWith('thumb:'));
     const ready = fresh.filter(m => m.ready);
-    if (ready.length >= count) return ready.slice(0, count);
+    if (ready.length >= count) {
+      return ready.slice(0, count);
+    }
 
     const failed = await page.evaluate(() => {
       const t = document.body.innerText;
@@ -67,13 +79,16 @@ export async function waitForNewMedia(page, beforeIds, { count = 1, timeoutMs = 
       await takeScreenshot(page, 'generation-failed');
       throw new FlowError(ErrorCodes.GENERATION_TIMEOUT, `Flow reported: ${failed}`);
     }
-    if (Date.now() - lastShot > 30000) {
-      lastShot = Date.now();
-      logger.info('Waiting for new media', { elapsedS: Math.round((Date.now() - start) / 1000), fresh: fresh.length });
+    if (Date.now() - lastLog > 30000) {
+      lastLog = Date.now();
+      logger.info('Waiting for new media', {
+        elapsedS: Math.round((Date.now() - start) / 1000), tilesBefore: beforeCount, tilesNow: media.length, ready: ready.length,
+      });
     }
     await page.waitForTimeout(1500);
   }
-  const partial = (await listMedia(page).catch(() => [])).filter(m => !before.has(m.id) && m.ready);
+  const media = await listMedia(page).catch(() => []);
+  const partial = media.slice(0, Math.max(0, media.length - beforeCount)).filter(m => m.ready && (!type || m.type === type));
   if (partial.length) return partial;
   await takeScreenshot(page, 'generation-timeout');
   throw new FlowError(ErrorCodes.GENERATION_TIMEOUT,
