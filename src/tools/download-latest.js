@@ -1,6 +1,6 @@
 import { getPage } from '../browser/connect.js';
 import { logger } from '../utils/logger.js';
-import { listMedia, downloadMedia } from '../browser/media.js';
+import { listMedia, downloadMedia, scrollGridToTop, findTile } from '../browser/media.js';
 import { ensureProjectInContext, extractProjectId } from '../navigation/project-navigator.js';
 import { FlowError, ErrorCodes } from '../utils/errors.js';
 import { get } from '../utils/config.js';
@@ -19,7 +19,12 @@ export async function handleDownloadLatest(args = {}) {
   if (args.project_name || args.project_id || !extractProjectId(page.url())) {
     await ensureProjectInContext(page, { name: args.project_name, project_id: args.project_id });
   }
-  await page.locator('[data-media-id]').first().waitFor({ state: 'visible', timeout: 15000 }).catch(() => {});
+  await page.locator('flow-grid-tile-container').first().waitFor({ state: 'visible', timeout: 15000 }).catch(() => {});
+  // The grid is virtual and may be scrolled; "latest" means the top of the grid.
+  await scrollGridToTop(page);
+  if (args.media_id && !(await listMedia(page)).some(m => m.id === args.media_id)) {
+    await findTile(page, { id: args.media_id });
+  }
 
   let media = (await listMedia(page)).filter(m => m.ready);
   if (args.type) media = media.filter(m => m.type === args.type);
