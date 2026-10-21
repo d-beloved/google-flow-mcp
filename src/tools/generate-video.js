@@ -53,8 +53,9 @@ export async function handleGenerateVideo(args) {
     if (!get('videoRatios', ['16:9', '9:16']).includes(ratio)) {
       throw new FlowError(ErrorCodes.RATIO_NOT_AVAILABLE, `Ratio ${ratio} not available for video (16:9 or 9:16).`);
     }
-    const duration = args.duration ? (String(args.duration).endsWith('s') ? String(args.duration) : `${args.duration}s`) : '6s';
-    if (!get('durations', ['4s', '6s', '8s', '10s']).includes(duration)) {
+    // Only enforce duration/resolution when asked; otherwise keep the model's own setting.
+    const duration = args.duration ? (String(args.duration).endsWith('s') ? String(args.duration) : `${args.duration}s`) : null;
+    if (duration && !get('durations', ['4s', '6s', '8s', '10s']).includes(duration)) {
       throw new FlowError(ErrorCodes.INVALID_PARAMS, `Duration ${duration} not available (4s, 6s, 8s, 10s).`);
     }
     const qty = Math.min(Math.max(args.quantity || 1, 1), 4);
@@ -62,7 +63,7 @@ export async function handleGenerateVideo(args) {
     const config = await configureGenerationUI({
       mode: 'Video', ratio, model, duration, quantity: qty,
       videoInput: args.video_input || 'Ingredients',
-      resolution: args.resolution || '720p',
+      resolution: args.resolution || null,
     });
 
     const promptInput = page.locator('[role="textbox"][aria-label="What do you want to create?"]').first();
@@ -84,7 +85,8 @@ export async function handleGenerateVideo(args) {
     if (mentionNames.length) mentionResults = await insertMentionReferences(page, promptInput, mentionNames);
 
     const base = {
-      type: 'video', account: get('expectedAccount'), model_used: model, ratio, duration,
+      type: 'video', account: get('expectedAccount'), model_used: model, ratio,
+      duration: duration || ((config.chipText.match(/\b(\d+s)\b/) || [])[1] ?? null),
       quantity: qty, chip: config.chipText, prompt: args.prompt,
       credit_cost: config.creditCost?.credits ?? null, credit_cost_text: config.creditCost?.text ?? null,
       ingredients_inserted: mentionResults.inserted, ingredients_failed: mentionResults.failed,

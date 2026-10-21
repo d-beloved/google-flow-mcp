@@ -472,11 +472,21 @@ export async function configureGenerationUI(options = {}) {
   }
   if (mode === 'Video') {
     if (videoInput && !(await pickToggle(page, videoInput))) logger.warn(`Could not select ${videoInput}`);
-    if (resolution && !(await pickToggle(page, resolution))) logger.warn(`Could not select ${resolution}`);
-    if (duration) {
-      const durStr = String(duration).endsWith('s') ? String(duration) : `${duration}s`;
-      if (!(await pickToggle(page, durStr))) logger.warn(`Could not select duration ${durStr}`);
-    }
+    // Some models (e.g. Veo 3.1 - Lite) have fixed resolution/duration and show no
+    // toggle. A requested value that is neither selectable nor already in effect is
+    // an error — never generate with settings the caller did not ask for.
+    const chipNow = async () => normalizeLabel(
+      await page.locator(SETTINGS_TRIGGER).first().textContent().catch(() => ''));
+    const strict = async (label, what) => {
+      if (await pickToggle(page, label)) return;
+      const chip = await chipNow();
+      if (new RegExp(`\\b${escapeRe(label.toLowerCase())}\\b`).test(chip)) return;
+      await closeOverlays(page);
+      throw new FlowError(ErrorCodes.INVALID_PARAMS,
+        `${model || 'This model'} does not offer ${what} ${label}. Current settings: "${chip}".`);
+    };
+    if (resolution) await strict(resolution, 'resolution');
+    if (duration) await strict(String(duration).endsWith('s') ? String(duration) : `${duration}s`, 'duration');
   }
 
   // Verify the model inside the panel (the video chip doesn't show the model).
