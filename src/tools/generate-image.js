@@ -296,6 +296,7 @@ export async function handleGenerateImage(args) {
     // STEP 12: Wait for the new image tile(s).
     const quantity = args.quantity || 1;
     const media = await waitForNewMedia(page, beforeIds, {
+      exclude: Array.isArray(args.exclude_ids) ? args.exclude_ids : [],
       count: quantity, type: 'image', timeoutMs: get('generationTimeoutMs', 180000),
     });
     logger.info('Generated images detected', { count: media.length, ids: media.map(m => m.id) });

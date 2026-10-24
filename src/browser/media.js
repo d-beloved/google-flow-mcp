@@ -74,16 +74,23 @@ const stableKey = m => (m.id && !m.id.startsWith('thumb:') && !m.id.startsWith('
  * tiles are those rendered before the first tile we saw before clicking Generate.
  * `before` is the listMedia() array captured (at scroll top) before Generate.
  */
-export async function waitForNewMedia(page, before, { count = 1, timeoutMs = 180000, type } = {}) {
+export async function waitForNewMedia(page, before, { count = 1, timeoutMs = 180000, type, exclude } = {}) {
   const beforeKeys = new Set((before || []).map(b => (typeof b === 'string' ? b : stableKey(b))));
+  // A tile can change key between snapshots (a video's thumbnail loads after the
+  // snapshot, so "video|title" becomes "vid:<uuid>"). Remember titles of tiles
+  // whose key was not stable, and never return ids the caller already owns.
+  const unstableTitles = new Set((before || []).filter(b => typeof b !== 'string' && stableKey(b) !== b.id)
+    .map(b => `${b.type}|${b.title}`));
+  const excluded = new Set(exclude || []);
+  const isOld = m => beforeKeys.has(stableKey(m)) || excluded.has(m.id) || unstableTitles.has(`${m.type}|${m.title}`);
   const start = Date.now();
   let lastLog = 0;
   while (Date.now() - start < timeoutMs) {
     await scrollGridToTop(page);
     const media = await listMedia(page).catch(() => []);
-    const firstOld = media.findIndex(m => beforeKeys.has(stableKey(m)));
+    const firstOld = media.findIndex(isOld);
     const fresh = (firstOld === -1 ? (beforeKeys.size ? [] : media) : media.slice(0, firstOld))
-      .filter(m => !type || m.type === type);
+      .filter(m => (!type || m.type === type) && !isOld(m));
     const ready = fresh.filter(m => m.ready);
     if (ready.length >= count) return ready.slice(0, count);
     // Flow shows a "Failed — Failed to load image" tile when a generation fails.

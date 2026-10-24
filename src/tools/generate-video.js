@@ -143,6 +143,7 @@ export async function handleGenerateVideo(args) {
     if (await acceptBtn.isVisible({ timeout: 5000 }).catch(() => false)) await acceptBtn.click();
 
     const media = await waitForNewMedia(page, beforeIds, {
+      exclude: Array.isArray(args.exclude_ids) ? args.exclude_ids : [],
       count: qty, type: 'video', timeoutMs: get('videoGenerationTimeoutMs', 600000),
     });
 

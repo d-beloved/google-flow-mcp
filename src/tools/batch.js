@@ -40,6 +40,20 @@ function load(id) {
   return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf-8')) : null;
 }
 
+/** Every media id produced by this batch and earlier batches with the same name. */
+function ownedMediaIds(state) {
+  const ids = new Set();
+  for (const it of state.items) for (const id of it.media_ids || []) ids.add(id);
+  try {
+    for (const f of fs.readdirSync(BATCH_DIR)) {
+      if (!f.startsWith(`${state.name}-`) || !f.endsWith('.json')) continue;
+      const old = JSON.parse(fs.readFileSync(path.join(BATCH_DIR, f), 'utf8'));
+      for (const it of old.items || []) for (const id of it.media_ids || []) ids.add(id);
+    }
+  } catch { /* ignore */ }
+  return [...ids];
+}
+
 /** Media id for a label: this batch first, then earlier batches with the same name (newest first). */
 function findLabelMedia(state, label) {
   const hit = state.items.find(x => x.label === label && x.status === 'done' && x.media_ids?.length);
@@ -93,6 +107,8 @@ async function runBatch(state) {
         ...d,
         ...item,
       };
+      // Never let a later item claim media an earlier item already produced.
+      common.exclude_ids = ownedMediaIds(state);
       let result;
       if (item.type === 'upload') {
         const page = getPage();
