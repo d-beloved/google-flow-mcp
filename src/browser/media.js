@@ -323,3 +323,60 @@ export async function animateFromTile(page, { id, title }) {
   if (!/Video/.test(chip || '')) throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE, `Animate did not switch to Video mode (chip: "${chip}").`);
   return m;
 }
+
+/**
+ * Upload a local image into the current project. Tries the header "Add media
+ * menu" → Upload, then the prompt "+" / "@" picker's "Upload media" button,
+ * catching the native file chooser. Waits for the new tile and returns it.
+ */
+export async function uploadMedia(page, filePath) {
+  if (!fs.existsSync(filePath)) throw new FlowError(ErrorCodes.INVALID_PARAMS, `File not found: ${filePath}`);
+  await scrollGridToTop(page);
+  const before = await listMedia(page);
+
+  const tryRoute = async (openFn) => {
+    const chooserP = page.waitForEvent('filechooser', { timeout: 8000 }).catch(() => null);
+    const opened = await openFn().catch(() => false);
+    if (!opened) return false;
+    const chooser = await chooserP;
+    if (!chooser) { await page.keyboard.press('Escape').catch(() => {}); return false; }
+    await chooser.setFiles(filePath);
+    return true;
+  };
+
+  const viaHeader = async () => {
+    const btn = page.locator('button[aria-label="Add media menu"]').first();
+    if (!(await btn.isVisible({ timeout: 3000 }).catch(() => false))) return false;
+    await btn.click();
+    const item = page.locator(MENU_ITEM).filter({ hasText: /Upload/i }).first();
+    if (!(await item.isVisible({ timeout: 3000 }).catch(() => false))) { await page.keyboard.press('Escape'); return false; }
+    await item.click();
+    return true;
+  };
+  const viaPicker = async () => {
+    const btn = page.locator('button[aria-label="Add ingredients to the prompt box"]').first();
+    if (!(await btn.isVisible({ timeout: 3000 }).catch(() => false))) return false;
+    await btn.click();
+    const up = page.locator('.cdk-overlay-container button').filter({ hasText: /Upload/i }).first();
+    if (!(await up.isVisible({ timeout: 3000 }).catch(() => false))) { await page.keyboard.press('Escape'); return false; }
+    await up.click();
+    return true;
+  };
+
+  let ok = await tryRoute(viaHeader);
+  if (!ok) ok = await tryRoute(viaPicker);
+  if (!ok) {
+    // Last resort: a file input already in the DOM.
+    const input = page.locator('input[type="file"]').first();
+    if (await input.count()) { await input.setInputFiles(filePath); ok = true; }
+  }
+  if (!ok) {
+    await takeScreenshot(page, 'upload-no-route');
+    throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE, 'Could not find an upload control in this project.');
+  }
+  logger.info('Upload started', { file: path.basename(filePath) });
+  await page.waitForTimeout(1500);
+  await page.keyboard.press('Escape').catch(() => {});
+  const [tile] = await waitForNewMedia(page, before, { count: 1, timeoutMs: 120000 });
+  return tile;
+}

@@ -23,6 +23,9 @@ import { getFlowHome } from '../utils/config.js';
 import { handleGenerateImage } from './generate-image.js';
 import { handleGenerateVideo } from './generate-video.js';
 import { FlowError, ErrorCodes } from '../utils/errors.js';
+import { getPage } from '../browser/connect.js';
+import { uploadMedia } from '../browser/media.js';
+import { ensureProjectInContext } from '../navigation/project-navigator.js';
 
 const BATCH_DIR = path.join(getFlowHome(), 'outputs', 'batches');
 const batches = new Map(); // id -> state (in memory while running)
@@ -91,7 +94,13 @@ async function runBatch(state) {
         ...item,
       };
       let result;
-      if (item.type === 'video') {
+      if (item.type === 'upload') {
+        const page = getPage();
+        await ensureProjectInContext(page, { name: state.project_name });
+        const file = path.isAbsolute(item.file) ? item.file : path.join(getFlowHome(), item.file);
+        const tile = await uploadMedia(page, file);
+        result = { media_ids: [tile.id], titles: [tile.title], downloads: [] };
+      } else if (item.type === 'video') {
         if (item.start_frame_label) {
           const mediaId = findLabelMedia(state, item.start_frame_label);
           if (!mediaId) {
