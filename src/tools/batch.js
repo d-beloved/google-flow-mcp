@@ -146,6 +146,19 @@ async function runBatch(state) {
       item.credit_cost = result.credit_cost ?? null;
       item.ingredients_inserted = result.ingredients_inserted;
       item.ingredients_failed = result.ingredients_failed;
+      // Flow's image upscaler sometimes fails ("Upscaling failed"). Fall back to
+      // the 1K original so every image still lands on disk.
+      if (item.type === 'image' && common.download && common.download !== '1K'
+          && (result.media_ids || []).length > (result.downloads || []).length) {
+        const have = new Set((result.downloads || []).map(d => d.mediaId));
+        for (const id of result.media_ids.filter(x => !have.has(x))) {
+          const r = await handleDownloadLatest({ media_id: id, size: '1K' }).catch(() => null);
+          if (r?.downloads?.length) {
+            result.downloads = [...(result.downloads || []), ...r.downloads];
+            item.fallback_1k = true;
+          }
+        }
+      }
       item.files = (result.downloads || []).map((dl, i) =>
         moveDownload(dl, outDir, result.downloads.length > 1 ? `${item.label}_${i + 1}` : item.label));
       item.download_errors = result.download_errors || [];
