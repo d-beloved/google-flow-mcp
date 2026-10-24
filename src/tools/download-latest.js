@@ -17,7 +17,10 @@ import { get } from '../utils/config.js';
  */
 export async function handleDownloadLatest(args = {}) {
   const page = getPage();
-  if (args.project_name || args.project_id || !extractProjectId(page.url())) {
+  if (!args.project_name && !args.project_id && !extractProjectId(page.url())) {
+    throw new FlowError(ErrorCodes.INVALID_PARAMS, 'No project is open. Pass project_name or project_id.');
+  }
+  if (args.project_name || args.project_id) {
     await ensureProjectInContext(page, { name: args.project_name, project_id: args.project_id });
   }
   await page.locator('flow-grid-tile-container').first().waitFor({ state: 'visible', timeout: 15000 }).catch(() => {});
@@ -33,13 +36,22 @@ export async function handleDownloadLatest(args = {}) {
   }
 
   // A tile scrolled into view needs a moment for its image to load.
+  // Wait until the newest tiles have loaded; "ready only" would skip a tile
+  // that is still loading and silently return an older one instead.
   let media = [];
-  for (let i = 0; i < 20; i++) {
-    media = (await listMedia(page)).filter(m => m.ready);
-    if (!args.media_id || media.some(m => m.id === args.media_id || m.id.startsWith(args.media_id))) break;
+  const want = Math.max(1, Number(args.count) || 1);
+  for (let i = 0; i < 60; i++) {
+    const all = (await listMedia(page)).filter(m => !args.type || m.type === args.type);
+    if (args.media_id) {
+      media = all.filter(m => m.ready);
+      if (media.some(m => m.id === args.media_id || m.id.startsWith(args.media_id))) break;
+    } else {
+      const top = all.slice(0, want);
+      media = top.filter(m => m.ready);
+      if (top.length >= want && media.length === top.length) break;
+    }
     await page.waitForTimeout(500);
   }
-  if (args.type) media = media.filter(m => m.type === args.type);
   if (args.media_id) media = media.filter(m => m.id === args.media_id || m.id.startsWith(args.media_id));
   if (!media.length) {
     throw new FlowError(ErrorCodes.DOWNLOAD_FAILED, 'No downloadable media found in this project.');
