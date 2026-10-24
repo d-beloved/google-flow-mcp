@@ -22,6 +22,7 @@ import { logger } from '../utils/logger.js';
 import { getFlowHome } from '../utils/config.js';
 import { handleGenerateImage } from './generate-image.js';
 import { handleGenerateVideo } from './generate-video.js';
+import { handleDownloadLatest } from './download-latest.js';
 import { FlowError, ErrorCodes } from '../utils/errors.js';
 import { getPage } from '../browser/connect.js';
 import { uploadMedia } from '../browser/media.js';
@@ -110,7 +111,18 @@ async function runBatch(state) {
       // Never let a later item claim media an earlier item already produced.
       common.exclude_ids = ownedMediaIds(state);
       let result;
-      if (item.type === 'upload') {
+      if (item.type === 'download') {
+        // Re-download an item made earlier (by label or media id), e.g. after
+        // Flow's upscaler failed. Tries each size in order.
+        const mediaId = item.media_id || findLabelMedia(state, item.from_label || item.label);
+        if (!mediaId) throw new FlowError(ErrorCodes.INVALID_PARAMS, `No media found for ${item.from_label || item.label}.`);
+        let r = null;
+        for (const size of (item.sizes || [item.size || '2K', '1K'])) {
+          r = await handleDownloadLatest({ media_id: mediaId, size, project_name: state.project_name });
+          if (r.downloads?.length) { item.size_used = size; break; }
+        }
+        result = { media_ids: [mediaId], downloads: r?.downloads || [], download_errors: r?.errors };
+      } else if (item.type === 'upload') {
         const page = getPage();
         await ensureProjectInContext(page, { name: state.project_name });
         const file = path.isAbsolute(item.file) ? item.file : path.join(getFlowHome(), item.file);
