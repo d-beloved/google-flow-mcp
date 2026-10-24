@@ -32,7 +32,13 @@ export async function handleDownloadLatest(args = {}) {
     args = { ...args, media_id: hit.id };
   }
 
-  let media = (await listMedia(page)).filter(m => m.ready);
+  // A tile scrolled into view needs a moment for its image to load.
+  let media = [];
+  for (let i = 0; i < 20; i++) {
+    media = (await listMedia(page)).filter(m => m.ready);
+    if (!args.media_id || media.some(m => m.id === args.media_id || m.id.startsWith(args.media_id))) break;
+    await page.waitForTimeout(500);
+  }
   if (args.type) media = media.filter(m => m.type === args.type);
   if (args.media_id) media = media.filter(m => m.id === args.media_id || m.id.startsWith(args.media_id));
   if (!media.length) {
