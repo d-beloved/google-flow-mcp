@@ -110,6 +110,15 @@ async function runBatch(state) {
       };
       // Never let a later item claim media an earlier item already produced.
       common.exclude_ids = ownedMediaIds(state);
+      // "label:P1" in ingredients → the media id that item produced (this or earlier batches).
+      if (Array.isArray(common.ingredients)) {
+        common.ingredients = common.ingredients.map(x => {
+          if (typeof x !== 'string' || !x.startsWith('label:')) return x;
+          const id = findLabelMedia(state, x.slice(6));
+          if (!id) throw new FlowError(ErrorCodes.INVALID_PARAMS, `Reference ${x} not found.`);
+          return id;
+        });
+      }
       let result;
       if (item.type === 'download') {
         // Re-download an item made earlier (by label or media id), e.g. after
