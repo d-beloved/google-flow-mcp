@@ -376,7 +376,15 @@ export async function uploadMedia(page, filePath) {
   }
   logger.info('Upload started', { file: path.basename(filePath) });
   await page.waitForTimeout(1500);
-  await page.keyboard.press('Escape').catch(() => {});
+  // Flow asks the user to confirm rights to the image. That is the user's
+  // call, so wait (up to 5 min) for them to answer it in the browser.
+  const rights = page.getByText('Rights to use this image').first();
+  if (await rights.isVisible({ timeout: 1500 }).catch(() => false)) {
+    logger.warn('Waiting for the user to answer the "Rights to use this image" dialog');
+    await rights.waitFor({ state: 'hidden', timeout: 300000 }).catch(() => {
+      throw new FlowError(ErrorCodes.TIMEOUT || ErrorCodes.UNKNOWN_UI_CHANGE, 'The "Rights to use this image" dialog was not answered within 5 minutes.');
+    });
+  }
   const [tile] = await waitForNewMedia(page, before, { count: 1, timeoutMs: 120000 });
   return tile;
 }
