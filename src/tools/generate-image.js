@@ -279,6 +279,11 @@ export async function handleGenerateImage(args) {
     await scrollGridToTop(page);
     const beforeIds = await listMedia(page); // tiles at the top before Generate
 
+    // A tile's hover card (cdk overlay with ".metadata-row") can sit over the
+    // Generate button after we scroll the grid. Park the mouse and wait for it to go.
+    await page.mouse.move(8, 8).catch(() => {});
+    await page.locator('.cdk-overlay-container .metadata-row').first()
+      .waitFor({ state: 'hidden', timeout: 4000 }).catch(() => {});
     // STEP 10: Click generate ⚠️ CREDITS WILL BE CONSUMED
     logger.info('⚠️⚠️⚠️ Clicking Generate — credits will be consumed');
     await generateBtnLocator.click();
