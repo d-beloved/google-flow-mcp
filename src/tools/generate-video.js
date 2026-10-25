@@ -142,7 +142,12 @@ export async function handleGenerateVideo(args) {
     await page.locator('.cdk-overlay-container .metadata-row').first()
       .waitFor({ state: 'hidden', timeout: 4000 }).catch(() => {});
     logger.info('⚠️ Clicking Generate for VIDEO — credits will be consumed', { model, duration, qty });
-    await generateBtn.click();
+    // If an overlay still covers the button, click it through the DOM instead.
+    await generateBtn.click({ timeout: 5000 }).catch(async (e) => {
+      if (!/intercepts pointer events|Timeout/.test(e.message)) throw e;
+      logger.warn('Generate button covered by an overlay; clicking via DOM');
+      await generateBtn.evaluate(b => b.click());
+    });
 
     const acceptBtn = page.getByRole('button', { name: /^(Accept|Approve)$/ }).first();
     if (await acceptBtn.isVisible({ timeout: 5000 }).catch(() => false)) await acceptBtn.click();

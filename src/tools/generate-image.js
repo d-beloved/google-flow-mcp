@@ -286,7 +286,12 @@ export async function handleGenerateImage(args) {
       .waitFor({ state: 'hidden', timeout: 4000 }).catch(() => {});
     // STEP 10: Click generate ⚠️ CREDITS WILL BE CONSUMED
     logger.info('⚠️⚠️⚠️ Clicking Generate — credits will be consumed');
-    await generateBtnLocator.click();
+    // If an overlay still covers the button, click it through the DOM instead.
+    await generateBtnLocator.click({ timeout: 5000 }).catch(async (e) => {
+      if (!/intercepts pointer events|Timeout/.test(e.message)) throw e;
+      logger.warn('Generate button covered by an overlay; clicking via DOM');
+      await generateBtnLocator.evaluate(b => b.click());
+    });
 
     // STEP 11: If the Agent asks for approval, accept (exact button names only).
     let flowMode = 'direct';
