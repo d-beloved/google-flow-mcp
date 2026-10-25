@@ -139,8 +139,16 @@ export async function handleGenerateVideo(args) {
     // A tile's hover card (cdk overlay with ".metadata-row") can sit over the
     // Generate button after we scroll the grid. Park the mouse and wait for it to go.
     await page.mouse.move(8, 8).catch(() => {});
-    await page.locator('.cdk-overlay-container .metadata-row').first()
-      .waitFor({ state: 'hidden', timeout: 4000 }).catch(() => {});
+    const hoverCard = page.locator('.cdk-overlay-container .metadata-row').first();
+    if (!(await hoverCard.waitFor({ state: 'hidden', timeout: 2500 }).then(() => true).catch(() => false))) {
+      // The ingredient details card stays open until dismissed; Escape closes it.
+      logger.warn('Ingredient details card is open over Generate; pressing Escape');
+      await page.keyboard.press('Escape').catch(() => {});
+      await hoverCard.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {});
+      const promptText = await page.locator('[role=textbox][aria-label="What do you want to create?"]').first()
+        .innerText().catch(() => '');
+      if (!promptText.trim()) throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE, 'Escape cleared the prompt; not generating.');
+    }
     logger.info('⚠️ Clicking Generate for VIDEO — credits will be consumed', { model, duration, qty });
     // If an overlay still covers the button, click it through the DOM instead.
     await generateBtn.click({ timeout: 5000 }).catch(async (e) => {
