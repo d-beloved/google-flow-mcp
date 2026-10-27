@@ -251,7 +251,7 @@ All settings live in `config/flow.config.json` (copy from `flow.config.example.j
 | `chromeUserDataDir` | Path to Chrome's "User Data" folder | auto-detected |
 | `chromeProfile` | Profile folder name (e.g. `Default`, `Profile 1`) | `Default` |
 | `cdpPort` | Chrome DevTools Protocol port | `9222` |
-| `flowUrl` | Base Google Flow URL | `https://labs.google/fx/tools/flow` |
+| `flowUrl` | Base Google Flow URL | `https://flow.google.com` |
 | `headless` | Run Chrome headless | `true` |
 | `jobTimeoutMs` | Max time to wait for a generation job | `300000` |
 | `imageModels` / `videoModels` | Display name → internal model ID maps | see example config |
