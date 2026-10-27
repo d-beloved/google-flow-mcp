@@ -1,12 +1,17 @@
 # Google Flow Browser MCP
 
 An MCP (Model Context Protocol) server that lets an AI agent drive
-[Google Flow](https://labs.google/fx/tools/flow) (`labs.google/fx/tools/flow`)
+[Google Flow](https://flow.google.com) (`flow.google.com`)
 through your own logged-in Chrome profile — generating images, videos,
 characters, and scenes — without ever sharing your Google credentials with
 the agent.
 
 This server supports **Windows**, **macOS**, and **Linux** out of the box using unified npm commands that automatically dispatch platform-specific execution.
+
+> Maintained by [Ayodeji Moronkeji](https://github.com/d-beloved). Started as a fork of
+> [shaig-mahmudov/google-flow-mcp](https://github.com/shaig-mahmudov/google-flow-mcp) (MIT),
+> then reworked for the new flow.google.com UI: batch manifests, uploads, upscaled
+> downloads, project open-by-name, and a hot-reload supervisor.
 
 ---
 

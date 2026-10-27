@@ -1,7 +1,7 @@
 {
-  "name": "google-flow_mcp",
-  "version": "1.0.1",
-  "description": "MCP server for Google Flow (labs.google/fx/tools/flow) via browser automation",
+  "name": "google-flow-mcp",
+  "version": "2.0.0",
+  "description": "MCP server for Google Flow (flow.google.com) via browser automation: batch image/video generation, upscaled downloads, hot reload",
   "keywords": [
     "Image",
     "generation",
@@ -10,16 +10,16 @@
     "browser",
     "automation"
   ],
-  "homepage": "https://github.com/shaig-mahmudov/google-flow-mcp#readme",
+  "homepage": "https://github.com/d-beloved/google-flow-mcp#readme",
   "bugs": {
-    "url": "https://github.com/shaig-mahmudov/google-flow-mcp/issues"
+    "url": "https://github.com/d-beloved/google-flow-mcp/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shaig-mahmudov/google-flow-mcp.git"
+    "url": "git+https://github.com/d-beloved/google-flow-mcp.git"
   },
   "license": "MIT",
-  "author": "Mitansh Prajapati",
+  "author": "Ayodeji Moronkeji (https://morayodeji.dev)",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -50,5 +50,8 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "contributors": [
+    "Shaig Mahmudov (original project)"
+  ]
 }
