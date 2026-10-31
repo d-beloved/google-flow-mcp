@@ -104,6 +104,7 @@ async function runBatch(state) {
       const d = { ...(state.defaults?.[item.type] || {}) };
       const common = {
         project_name: state.project_name,
+        ...(state.project_id ? { project_id: state.project_id } : {}),
         auto_confirm: true,
         ...d,
         ...item,
@@ -127,13 +128,13 @@ async function runBatch(state) {
         if (!mediaId) throw new FlowError(ErrorCodes.INVALID_PARAMS, `No media found for ${item.from_label || item.label}.`);
         let r = null;
         for (const size of (item.sizes || [item.size || '2K', '1K'])) {
-          r = await handleDownloadLatest({ media_id: mediaId, size, project_name: state.project_name });
+          r = await handleDownloadLatest({ media_id: mediaId, size, project_name: state.project_name, ...(state.project_id ? { project_id: state.project_id } : {}) });
           if (r.downloads?.length) { item.size_used = size; break; }
         }
         result = { media_ids: [mediaId], downloads: r?.downloads || [], download_errors: r?.errors };
       } else if (item.type === 'upload') {
         const page = getPage();
-        await ensureProjectInContext(page, { name: state.project_name });
+        await ensureProjectInContext(page, { name: state.project_name, project_id: state.project_id || undefined });
         const file = path.isAbsolute(item.file) ? item.file : path.join(getFlowHome(), item.file);
         const tile = await uploadMedia(page, file);
         result = { media_ids: [tile.id], titles: [tile.title], downloads: [] };
@@ -228,6 +229,7 @@ export async function handleBatchStart(args = {}) {
     id: `${safeName(manifest.name || 'batch')}-${Date.now().toString(36)}`,
     name: manifest.name,
     project_name: args.project_name || manifest.project_name,
+    project_id: args.project_id || manifest.project_id || null,
     defaults: manifest.defaults || {},
     stop_on_error: args.stop_on_error ?? manifest.stop_on_error ?? false,
     items,
