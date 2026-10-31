@@ -94,9 +94,16 @@ export async function listExistingProjects(page) {
       const id = (href.match(/\/project\/([^/?#]+)/) || [])[1];
       const label = card.querySelector('.project-title-label');
       // Title is the label's own text, without the icon-button ligatures.
-      const name = label
+      let name = label
         ? [...label.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join(' ').replace(/\s+/g, ' ').trim()
         : '';
+      // Newer UI nests the title in child elements: fall back to visible text,
+      // dropping icon ligature lines (e.g. "more_vert") and date-like lines.
+      if (!name) {
+        const src = label || card.querySelector('[class*="title"]') || card;
+        name = (src.innerText || '').split('\n').map(s => s.trim())
+          .filter(s => s && !/^[a-z_]+$/.test(s)).shift() || card.getAttribute('aria-label') || '';
+      }
       return { id, name };
     }).filter(p => p.id && !seen.has(p.id) && seen.add(p.id));
   });
