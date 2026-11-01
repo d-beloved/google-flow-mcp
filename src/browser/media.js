@@ -315,13 +315,26 @@ export async function addMediaToPrompt(page, idOrTitle) {
  * prompt bar to Video → Frames with the image in the start slot.
  */
 export async function animateFromTile(page, { id, title }) {
-  const m = await findTile(page, { id, title });
-  if (!m) throw new FlowError(ErrorCodes.FLOW_PAGE_NOT_FOUND, `Start-frame image not found: ${id || title}`);
-  const tile = page.locator(TILE).nth(m.index);
-  await tile.click({ button: 'right' });
-  const item = page.locator(MENU_ITEM).filter({ hasText: /Animate$/ }).first();
-  if (!(await item.isVisible({ timeout: 4000 }).catch(() => false))) {
-    await page.keyboard.press('Escape');
+  // The context menu sometimes fails to open (the virtual grid re-renders under
+  // the cursor, or a leftover overlay eats the click). Retry a few times.
+  let item = null;
+  let m = null;
+  for (let attempt = 1; attempt <= 4 && !item; attempt++) {
+    await page.keyboard.press('Escape').catch(() => {});
+    await page.mouse.move(8, 8).catch(() => {});
+    await page.waitForTimeout(400 * attempt);
+    m = await findTile(page, { id, title });
+    if (!m) throw new FlowError(ErrorCodes.FLOW_PAGE_NOT_FOUND, `Start-frame image not found: ${id || title}`);
+    const tile = page.locator(TILE).nth(m.index);
+    await tile.scrollIntoViewIfNeeded().catch(() => {});
+    await tile.hover().catch(() => {});
+    await tile.click({ button: 'right' }).catch(() => {});
+    const cand = page.locator(MENU_ITEM).filter({ hasText: /Animate$/ }).first();
+    if (await cand.isVisible({ timeout: 3000 }).catch(() => false)) item = cand;
+    else logger.warn('Animate item not shown; retrying', { attempt, id: id || title });
+  }
+  if (!item) {
+    await page.keyboard.press('Escape').catch(() => {});
     throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE, 'Tile menu has no "Animate" item.');
   }
   await item.click();
