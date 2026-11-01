@@ -94,7 +94,8 @@ async function runBatch(state) {
   state.started_at = new Date().toISOString();
   save(state);
 
-  for (const item of state.items) {
+  for (let k = 0; k < state.items.length; k++) {
+    const item = state.items[k];
     if (state.cancel_requested) { state.status = 'cancelled'; break; }
     if (item.status === 'done') continue;
     item.status = 'running';
@@ -182,6 +183,29 @@ async function runBatch(state) {
       item.status = 'failed';
       item.error = e.message;
       logger.warn('Batch item failed', { batch: state.id, label: item.label, error: e.message });
+      // Chrome closed or the tab went away: reconnect once and retry this item,
+      // instead of failing every remaining item in a few milliseconds.
+      if (/Target page, context or browser has been closed|Browser not connected/i.test(e.message)) {
+        state.browser_drops = (state.browser_drops || 0) + 1;
+        if (state.browser_drops > 3) {
+          state.status = 'stopped';
+          state.stop_reason = 'Browser closed repeatedly; reconnect and restart the batch.';
+          save(state); return;
+        }
+        try {
+          const { handleToolCall } = await import('../core.js');
+          await handleToolCall('flow_connect', {});
+          logger.info('Reconnected to browser; retrying item', { label: item.label });
+          item.status = 'pending'; item.error = null;
+          save(state);
+          k--; // retry this same item
+          continue;
+        } catch (re) {
+          state.status = 'stopped';
+          state.stop_reason = `Browser closed and reconnect failed: ${re.message}`;
+          save(state); return;
+        }
+      }
       if (state.stop_on_error) { state.status = 'stopped'; save(state); return; }
     }
     item.finished_at = new Date().toISOString();
