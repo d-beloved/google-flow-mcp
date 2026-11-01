@@ -82,7 +82,8 @@ export async function waitForNewMedia(page, before, { count = 1, timeoutMs = 180
   const unstableTitles = new Set((before || []).filter(b => typeof b !== 'string' && stableKey(b) !== b.id)
     .map(b => `${b.type}|${b.title}`));
   const excluded = new Set(exclude || []);
-  const isOld = m => beforeKeys.has(stableKey(m)) || excluded.has(m.id) || unstableTitles.has(`${m.type}|${m.title}`);
+  const isOld = m => beforeKeys.has(stableKey(m)) || excluded.has(m.id)
+    || (stableKey(m) !== m.id && unstableTitles.has(`${m.type}|${m.title}`));
   const start = Date.now();
   let lastLog = 0;
   while (Date.now() - start < timeoutMs) {
