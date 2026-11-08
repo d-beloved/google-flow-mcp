@@ -9,6 +9,8 @@
 //   "project_name": "David Anthology (Goliath)",
 //   "defaults": { "image": { "model": "Nano Banana 2.1", "ratio": "16:9", "download": "2K" },
 //                 "video": { "model": "Veo 3.1 - Lite", "ratio": "16:9", "download": "720p" } },
+//   "pace_ms": 20000,            // optional gap between items
+//   "rate_limit_wait_ms": 600000, // back-off on "unusual activity" (x1, x2, x3, then stop)
 //   "items": [
 //     { "label": "S29", "type": "image", "prompt": "...", "ingredients": ["Warrior standing on rocky ridge"] },
 //     { "label": "V08", "type": "video", "prompt": "...", "start_frame_label": "S50" }
@@ -85,6 +87,16 @@ function moveDownload(dl, dir, label) {
   if (fs.existsSync(target)) target = path.join(dir, `${safeName(label)}_${Date.now()}${ext}`);
   fs.renameSync(dl.path, target);
   return target;
+}
+
+// Sleep in 5 s steps so a cancel still lands quickly. Returns true if cancelled.
+async function pause(state, ms) {
+  const end = Date.now() + ms;
+  while (Date.now() < end) {
+    if (state.cancel_requested) return true;
+    await new Promise(r => setTimeout(r, Math.min(5000, end - Date.now())));
+  }
+  return false;
 }
 
 async function runBatch(state) {
@@ -206,10 +218,34 @@ async function runBatch(state) {
           save(state); return;
         }
       }
+      // Google rate-limits bursts ("We noticed some unusual activity"). Firing the
+      // next item at once only deepens the block, so back off and retry this item:
+      // wait 10, 20, 30 min, then stop with the rest left pending.
+      if (/unusual activity/i.test(e.message)) {
+        state.rate_limits = (state.rate_limits || 0) + 1;
+        item.status = 'pending'; item.error = null;
+        if (state.rate_limits > (state.rate_limit_retries ?? 3)) {
+          state.status = 'stopped';
+          state.stop_reason = 'Flow flagged unusual activity repeatedly. Wait at least an hour, then restart for the pending items.';
+          save(state); return;
+        }
+        const waitMs = (state.rate_limit_wait_ms ?? 600000) * state.rate_limits;
+        state.waiting_until = new Date(Date.now() + waitMs).toISOString();
+        logger.warn('Flow rate limit; backing off', { label: item.label, waitMs });
+        save(state);
+        if (await pause(state, waitMs)) { state.status = 'cancelled'; break; }
+        state.waiting_until = null; save(state);
+        k--; continue;
+      }
       if (state.stop_on_error) { state.status = 'stopped'; save(state); return; }
     }
+    if (item.status === 'done') state.rate_limits = 0;
     item.finished_at = new Date().toISOString();
     save(state);
+    // Optional gap between items so a long run looks less like a burst.
+    if (state.pace_ms && k < state.items.length - 1) {
+      if (await pause(state, state.pace_ms)) { state.status = 'cancelled'; break; }
+    }
   }
   if (state.status === 'running') state.status = 'finished';
   state.finished_at = new Date().toISOString();
@@ -258,6 +294,9 @@ export async function handleBatchStart(args = {}) {
     project_id: args.project_id || manifest.project_id || null,
     defaults: manifest.defaults || {},
     stop_on_error: args.stop_on_error ?? manifest.stop_on_error ?? false,
+    pace_ms: args.pace_ms ?? manifest.pace_ms ?? 0,
+    rate_limit_wait_ms: manifest.rate_limit_wait_ms ?? 600000,
+    rate_limit_retries: manifest.rate_limit_retries ?? 3,
     items,
     created_at: new Date().toISOString(),
     status: 'queued',
