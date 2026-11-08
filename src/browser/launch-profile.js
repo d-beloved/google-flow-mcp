@@ -4,7 +4,7 @@ import fs from 'fs';
 import { logger } from '../utils/logger.js';
 import { get } from '../utils/config.js';
 import { FlowError, ErrorCodes } from '../utils/errors.js';
-import { launchChromeDirect, setPage, setContext, setConnected, setBrowser, isBrowserConnected } from './connect.js';
+import { launchChromeDirect, setPage, setContext, setConnected, setBrowser, isBrowserConnected, getBrowser } from './connect.js';
 import { getDefaultChromePath, getChromeProfileSourcePath } from '../utils/platform.js';
 
 const CDP_PORT = get('cdpPort', 9222);
@@ -12,8 +12,15 @@ const FLOW_URL = get('flowUrl', 'https://flow.google.com');
 
 export async function launchKiaraProfile(headless = false) {
   if (isBrowserConnected()) {
-    logger.info('Browser already connected, reusing');
-    return { success: true, message: 'Already connected' };
+    // Only reuse the cached connection if Chrome is really still there. After the
+    // Mac sleeps or Chrome restarts, the flag stays set but the context is dead.
+    const b = getBrowser();
+    if (b && b.isConnected() && b.contexts().length) {
+      logger.info('Browser already connected, reusing');
+      return { success: true, message: 'Already connected' };
+    }
+    logger.warn('Cached browser connection is dead; reconnecting');
+    setConnected(false);
   }
 
   const chromePath = get('chromeExecutable') || getDefaultChromePath();
