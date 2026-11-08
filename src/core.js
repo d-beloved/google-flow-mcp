@@ -8,7 +8,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { logger } from './utils/logger.js';
 import { launchKiaraProfile, navigateToFlow } from './browser/launch-profile.js';
-import { getPage, getBrowser, setBrowser, closeBrowser as closeBrowserConnection } from './browser/connect.js';
+import { getPage, getBrowser, setBrowser, getContext, setPage, closeBrowser as closeBrowserConnection } from './browser/connect.js';
 import { verifyAccount as checkAccount } from './browser/account-check.js';
 import { handleFlowOpen } from './tools/flow-open.js';
 import { handleFlowStatus } from './tools/flow-status.js';
@@ -337,10 +337,25 @@ export async function handleToolCall(name, args) {
     case 'flow_connect': {
       const result = await launchKiaraProfile(args?.headless || false);
       if (result.browser) setBrowser(result.browser);
-      const page = getPage();
+      let page = getPage();
+      // The tab we picked up can be one that was closed (Flow tab closed, Chrome
+      // restored its session). Open a fresh tab instead of failing the reconnect.
+      if (!page || page.isClosed()) {
+        page = await (result.context || getContext()).newPage();
+        setPage(page);
+      }
       let oauthRequired = false;
       if (args?.open_flow !== false) {
-        const navResult = await navigateToFlow(page);
+        let navResult;
+        try {
+          navResult = await navigateToFlow(page);
+        } catch (e) {
+          if (!/has been closed/i.test(e.message)) throw e;
+          logger.warn('Flow tab closed during connect; opening a new tab', { error: e.message });
+          page = await (result.context || getContext()).newPage();
+          setPage(page);
+          navResult = await navigateToFlow(page);
+        }
         if (navResult && navResult.authenticated === false) {
           oauthRequired = true;
         }
