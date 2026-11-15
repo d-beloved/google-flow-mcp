@@ -47,6 +47,33 @@ export async function listMedia(page) {
   }).filter((m, i, a) => a.findIndex(x => x.id === m.id) === i), TILE);
 }
 
+// Open a tile's context menu and wait for an item. Flow's menu animates in, and
+// Playwright's isVisible() does not wait, so poll with waitFor and retry the
+// right-click (a tile still finishing its generation can show a short menu).
+async function openTileMenuItem(page, tile, re, { tries = 3, timeoutMs = 5000 } = {}) {
+  for (let i = 0; i < tries; i++) {
+    await page.keyboard.press('Escape').catch(() => {});
+    await tile.scrollIntoViewIfNeeded().catch(() => {});
+    const item = page.locator(MENU_ITEM).filter({ hasText: re }).first();
+    // Nov 2026: right-click no longer opens the menu; hovering a tile shows a
+    // small toolbar (favourite, reuse, more ⋮) and the menu is behind "more".
+    // Try the ⋮ button first, then fall back to the old right-click.
+    await tile.hover().catch(() => {});
+    const more = tile.locator('button').filter({ hasText: /more_vert|more_horiz/ })
+      .or(tile.locator('button[aria-label*="ore" i], button[aria-label*="ption" i], button[aria-label*="enu" i]')).last();
+    if (await more.waitFor({ state: 'visible', timeout: 2500 }).then(() => true).catch(() => false)) {
+      await more.click().catch(() => {});
+      try { await item.waitFor({ state: 'visible', timeout: timeoutMs }); return item; } catch {}
+      await page.keyboard.press('Escape').catch(() => {});
+    }
+    await tile.click({ button: 'right' }).catch(() => {});
+    try { await item.waitFor({ state: 'visible', timeout: timeoutMs }); return item; } catch {}
+    await page.keyboard.press('Escape').catch(() => {});
+    await page.waitForTimeout(3000);
+  }
+  return null;
+}
+
 async function tileLocator(page, mediaId) {
   let m = (await listMedia(page)).find(x => x.id === mediaId);
   if (!m && !String(mediaId).startsWith('thumb:')) m = await findTile(page, { id: mediaId });
@@ -190,12 +217,8 @@ export async function downloadMedia(page, mediaId, { size = '2K', type = 'image'
   page.on('download', onDownload);
 
   try {
-    await page.keyboard.press('Escape').catch(() => {});
-    await tile.scrollIntoViewIfNeeded().catch(() => {});
-    await tile.click({ button: 'right' });
-
-    const dl = page.locator(MENU_ITEM).filter({ hasText: /Download$/ }).first();
-    if (!(await dl.isVisible({ timeout: 5000 }).catch(() => false))) {
+    const dl = await openTileMenuItem(page, tile, /Download/);
+    if (!dl) {
       await takeScreenshot(page, 'download-menu-missing');
       throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE, 'Tile menu has no "Download" item.');
     }
@@ -299,10 +322,8 @@ export async function addMediaToPrompt(page, idOrTitle) {
   const count = () => page.locator('.prompt-ingredient-bar button[aria-label="Ingredient"]').count().catch(() => 0);
   const before = await count();
   const tile = page.locator(TILE).nth(m.index);
-  await tile.scrollIntoViewIfNeeded().catch(() => {});
-  await tile.click({ button: 'right' });
-  const item = page.locator(MENU_ITEM).filter({ hasText: /Add to prompt$/ }).first();
-  if (!(await item.isVisible({ timeout: 4000 }).catch(() => false))) {
+  const item = await openTileMenuItem(page, tile, /Add to prompt/);
+  if (!item) {
     await page.keyboard.press('Escape');
     return false;
   }
@@ -327,11 +348,8 @@ export async function animateFromTile(page, { id, title }) {
     m = await findTile(page, { id, title });
     if (!m) throw new FlowError(ErrorCodes.FLOW_PAGE_NOT_FOUND, `Start-frame image not found: ${id || title}`);
     const tile = page.locator(TILE).nth(m.index);
-    await tile.scrollIntoViewIfNeeded().catch(() => {});
-    await tile.hover().catch(() => {});
-    await tile.click({ button: 'right' }).catch(() => {});
-    const cand = page.locator(MENU_ITEM).filter({ hasText: /Animate$/ }).first();
-    if (await cand.isVisible({ timeout: 3000 }).catch(() => false)) item = cand;
+    const cand = await openTileMenuItem(page, tile, /Animate/, { tries: 1, timeoutMs: 4000 });
+    if (cand) item = cand;
     else logger.warn('Animate item not shown; retrying', { attempt, id: id || title });
   }
   if (!item) {
