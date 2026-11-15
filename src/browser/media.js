@@ -53,20 +53,20 @@ export async function listMedia(page) {
 async function openTileMenuItem(page, tile, re, { tries = 3, timeoutMs = 5000 } = {}) {
   for (let i = 0; i < tries; i++) {
     await page.keyboard.press('Escape').catch(() => {});
-    await tile.scrollIntoViewIfNeeded().catch(() => {});
+    await tile.scrollIntoViewIfNeeded({ timeout: 5000 }).catch(() => {});
     const item = page.locator(MENU_ITEM).filter({ hasText: re }).first();
     // Nov 2026: right-click no longer opens the menu; hovering a tile shows a
     // small toolbar (favourite, reuse, more ⋮) and the menu is behind "more".
     // Try the ⋮ button first, then fall back to the old right-click.
-    await tile.hover().catch(() => {});
+    await tile.hover({ timeout: 4000 }).catch(() => {});
     const more = tile.locator('button').filter({ hasText: /more_vert|more_horiz/ })
       .or(tile.locator('button[aria-label*="ore" i], button[aria-label*="ption" i], button[aria-label*="enu" i]')).last();
     if (await more.waitFor({ state: 'visible', timeout: 2500 }).then(() => true).catch(() => false)) {
-      await more.click().catch(() => {});
+      await more.click({ timeout: 4000 }).catch(() => more.evaluate(el => el.click(), undefined, { timeout: 3000 }).catch(() => {}));
       try { await item.waitFor({ state: 'visible', timeout: timeoutMs }); return item; } catch {}
       await page.keyboard.press('Escape').catch(() => {});
     }
-    await tile.click({ button: 'right' }).catch(() => {});
+    await tile.click({ button: 'right', timeout: 4000 }).catch(() => {});
     try { await item.waitFor({ state: 'visible', timeout: timeoutMs }); return item; } catch {}
     await page.keyboard.press('Escape').catch(() => {});
     await page.waitForTimeout(3000);
@@ -222,7 +222,7 @@ export async function downloadMedia(page, mediaId, { size = '2K', type = 'image'
       await takeScreenshot(page, 'download-menu-missing');
       throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE, 'Tile menu has no "Download" item.');
     }
-    await dl.click();
+    await dl.click({ timeout: 5000 }).catch(() => dl.evaluate(el => el.click(), undefined, { timeout: 3000 }));
     await page.waitForTimeout(600);
 
     const sub = page.locator(`${MENU_ITEM}:not(:has-text("Download"))`);
@@ -327,7 +327,7 @@ export async function addMediaToPrompt(page, idOrTitle) {
     await page.keyboard.press('Escape');
     return false;
   }
-  await item.click();
+  await item.click({ timeout: 5000 }).catch(() => item.evaluate(el => el.click(), undefined, { timeout: 3000 }));
   await page.waitForTimeout(800);
   return (await count()) > before;
 }
@@ -356,7 +356,7 @@ export async function animateFromTile(page, { id, title }) {
     await page.keyboard.press('Escape').catch(() => {});
     throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE, 'Tile menu has no "Animate" item.');
   }
-  await item.click();
+  await item.click({ timeout: 5000 }).catch(() => item.evaluate(el => el.click(), undefined, { timeout: 3000 }));
   await page.waitForTimeout(1500);
   const chip = await page.locator('button[aria-label="Settings trigger"]').first().textContent().catch(() => '');
   if (!/Video/.test(chip || '')) throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE, `Animate did not switch to Video mode (chip: "${chip}").`);

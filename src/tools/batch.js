@@ -218,6 +218,24 @@ async function runBatch(state) {
           save(state); return;
         }
       }
+      // The Mac lost its connection (or Flow didn't load): wait and retry this
+      // item instead of failing every remaining one in seconds. Stop after ~20 min.
+      if (/net::ERR_|Timeout \d+ms exceeded[\s\S]*navigating|"New project" button not found/i.test(e.message)) {
+        state.net_waits = (state.net_waits || 0) + 1;
+        item.status = 'pending'; item.error = null;
+        if (state.net_waits > 20) {
+          state.status = 'stopped';
+          state.stop_reason = 'Flow unreachable for about 20 minutes (network or Flow down). Restart the batch when it is back.';
+          save(state); return;
+        }
+        state.waiting_until = new Date(Date.now() + 60000).toISOString();
+        logger.warn('Flow unreachable; waiting 60 s', { label: item.label, error: e.message.slice(0, 120) });
+        save(state);
+        if (await pause(state, 60000)) { state.status = 'cancelled'; break; }
+        state.waiting_until = null;
+        try { const { handleToolCall } = await import('../core.js'); await handleToolCall('flow_connect', {}); } catch {}
+        k--; continue;
+      }
       // Google rate-limits bursts ("We noticed some unusual activity"). Firing the
       // next item at once only deepens the block, so back off and retry this item:
       // wait 10, 20, 30 min, then stop with the rest left pending.
@@ -239,7 +257,7 @@ async function runBatch(state) {
       }
       if (state.stop_on_error) { state.status = 'stopped'; save(state); return; }
     }
-    if (item.status === 'done') state.rate_limits = 0;
+    if (item.status === 'done') { state.rate_limits = 0; state.net_waits = 0; }
     item.finished_at = new Date().toISOString();
     save(state);
     // Optional gap between items so a long run looks less like a burst.
