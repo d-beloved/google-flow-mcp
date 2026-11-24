@@ -6,7 +6,7 @@ import { takeScreenshot } from '../utils/screenshots.js';
 import { configureGenerationUI, typeLikeHuman } from '../browser/safe-actions.js';
 import { saveMetadata } from '../utils/file-manager.js';
 import { listMedia, waitForNewMedia, downloadMedia, clearPromptIngredients, addMediaToPrompt } from '../browser/media.js';
-import { scrollGridToTop, animateFromTile } from '../browser/media.js';
+import { scrollGridToTop, animateFromTileVerified, readStartSlot } from '../browser/media.js';
 import { ensureProjectInContext } from '../navigation/project-navigator.js';
 import { insertMentionReferences } from '../navigation/mentions.js';
 import { get } from '../utils/config.js';
@@ -66,8 +66,8 @@ export async function handleGenerateVideo(args) {
     if (args.start_frame) {
       const sf = args.start_frame;
       const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(sf);
-      startFrame = await animateFromTile(page, isId ? { id: sf } : { title: sf });
-      logger.info('Start frame set via Animate', { start_frame: sf, title: startFrame.title });
+      startFrame = await animateFromTileVerified(page, isId ? { id: sf } : { title: sf });
+      logger.info('Start frame set via Animate', { start_frame: sf, title: startFrame.title, check: startFrame.start_slot_check });
     }
 
     const config = await configureGenerationUI({
@@ -148,6 +148,19 @@ export async function handleGenerateVideo(args) {
       const promptText = await page.locator('[role=textbox][aria-label="What do you want to create?"]').first()
         .innerText().catch(() => '');
       if (!promptText.trim()) throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE, 'Escape cleared the prompt; not generating.');
+    }
+    if (startFrame) {
+      // Last look right before spending credits: settings changes must not have swapped the slot.
+      const { startSlotMatches } = await import('../browser/media.js');
+      const slot = await readStartSlot(page);
+      const ok = startSlotMatches(slot, startFrame);
+      logger.info('Start slot before Generate', { ok, slotMediaId: slot.mediaId, slotSrc: (slot.src || '').slice(0, 120) });
+      if (ok === false) throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE, 'Start slot changed before Generate; not generating.', { slot });
+    }
+    if (args.dry_run === true) {
+      const slot = await readStartSlot(page);
+      jobQueue.completeJob?.(job.id, { dry_run: true });
+      return { status: 'dry_run', start_frame: startFrame ? { id: startFrame.id, title: startFrame.title, check: startFrame.start_slot_check, src: (startFrame.src || '').slice(0, 200) } : null, start_slot: { ...slot, src: (slot.src || '').slice(0, 200) }, message: 'Stopped before Generate; no credits used.' };
     }
     logger.info('⚠️ Clicking Generate for VIDEO — credits will be consumed', { model, duration, qty });
     // If an overlay still covers the button, click it through the DOM instead.

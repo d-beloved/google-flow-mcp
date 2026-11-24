@@ -336,6 +336,64 @@ export async function addMediaToPrompt(page, idOrTitle) {
  * Set a still as the video start frame: tile menu → "Animate". Flow switches the
  * prompt bar to Video → Frames with the image in the start slot.
  */
+/**
+ * Read the composer's Start-frame slot (Frames mode). The slot is the element
+ * just before the "swap_horiz" button; when filled it holds an <img>.
+ * Returns { found, hasImg, mediaId, src, html } — html is a short snippet for logs.
+ */
+export async function readStartSlot(page) {
+  return page.evaluate(() => {
+    const swap = [...document.querySelectorAll('button')].find(b => (b.innerText || '').trim() === 'swap_horiz');
+    if (!swap) return { found: false };
+    let slot = swap.previousElementSibling;
+    if (!slot) {
+      const kids = [...swap.parentElement.children];
+      slot = kids[kids.indexOf(swap) - 1] || null;
+    }
+    if (!slot) return { found: false };
+    const img = slot.querySelector('img');
+    const idEl = slot.querySelector('[data-media-id]') || (slot.hasAttribute?.('data-media-id') ? slot : null);
+    const src = img ? (img.currentSrc || img.src || '') : '';
+    return {
+      found: true,
+      hasImg: !!img,
+      mediaId: idEl ? idEl.getAttribute('data-media-id') : null,
+      src,
+      text: (slot.innerText || '').trim().slice(0, 40),
+      html: slot.outerHTML.replace(/\s+/g, ' ').slice(0, 600),
+    };
+  }).catch(() => ({ found: false }));
+}
+
+const stripQuery = u => (u || '').split('?')[0];
+
+/** Does the Start slot show the tile we animated? null = can't tell. */
+export function startSlotMatches(slot, tile) {
+  if (!slot?.found || !slot.hasImg) return null;
+  const tid = (tile.id || '').replace(/^(vid:|thumb:)/, '');
+  if (slot.mediaId && tid && slot.mediaId === tid) return true;
+  if (tid && /^[0-9a-f-]{36}$/i.test(tid) && slot.src.includes(tid)) return true;
+  if (tile.src && stripQuery(slot.src) && stripQuery(slot.src) === stripQuery(tile.src)) return true;
+  if (slot.mediaId && tid && slot.mediaId !== tid) return false;
+  // Both are images with different addresses and no shared id.
+  return slot.src && tile.src ? false : null;
+}
+
+/** Try to empty the Start slot (its close/remove button), so Animate starts clean. */
+export async function clearStartSlot(page) {
+  const slot = await readStartSlot(page);
+  if (!slot.found || !slot.hasImg) return false;
+  return page.evaluate(() => {
+    const swap = [...document.querySelectorAll('button')].find(b => (b.innerText || '').trim() === 'swap_horiz');
+    const s = swap?.previousElementSibling;
+    if (!s) return false;
+    const btn = [...s.querySelectorAll('button')].find(b => /close|cancel|delete|remove/i.test((b.innerText || '') + ' ' + (b.getAttribute('aria-label') || '')));
+    if (!btn) return false;
+    btn.click();
+    return true;
+  }).catch(() => false);
+}
+
 export async function animateFromTile(page, { id, title }) {
   // The context menu sometimes fails to open (the virtual grid re-renders under
   // the cursor, or a leftover overlay eats the click). Retry a few times.
@@ -361,6 +419,38 @@ export async function animateFromTile(page, { id, title }) {
   const chip = await page.locator('button[aria-label="Settings trigger"]').first().textContent().catch(() => '');
   if (!/Video/.test(chip || '')) throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE, `Animate did not switch to Video mode (chip: "${chip}").`);
   return m;
+}
+
+/**
+ * Animate a tile, then make sure the Start slot really holds that tile.
+ * Nov 2026: three clips started from an OLD start frame although Animate was
+ * clicked on the right tile. If the slot shows something else, clear it and
+ * Animate again; after 3 tries throw (before Generate, so no credits are spent).
+ */
+export async function animateFromTileVerified(page, target, { tries = 3 } = {}) {
+  let last = null;
+  for (let t = 1; t <= tries; t++) {
+    const before = await readStartSlot(page);
+    if (before.hasImg) {
+      const cleared = await clearStartSlot(page);
+      logger.info('Start slot had an image before Animate', { cleared, mediaId: before.mediaId, src: (before.src || '').slice(0, 120) });
+      await page.waitForTimeout(600);
+    }
+    const m = await animateFromTile(page, target);
+    await page.waitForTimeout(800);
+    const slot = await readStartSlot(page);
+    const ok = startSlotMatches(slot, m);
+    last = { tile: { id: m.id, title: m.title, src: (m.src || '').slice(0, 160) }, slot: { ...slot, src: (slot.src || '').slice(0, 160) }, ok };
+    logger.info('Start slot check', { try: t, ok, tileId: m.id, slotMediaId: slot.mediaId, slotSrc: (slot.src || '').slice(0, 120), tileSrc: (m.src || '').slice(0, 120) });
+    if (ok === true) return { ...m, start_slot_check: 'match' };
+    if (ok === null) {
+      logger.warn('Start slot could not be verified', { slotHtml: slot.html });
+      return { ...m, start_slot_check: 'unverified', start_slot_html: slot.html };
+    }
+    logger.warn('Start slot shows a different image; retrying Animate', { try: t });
+    await page.keyboard.press('Escape').catch(() => {});
+  }
+  throw new FlowError(ErrorCodes.UNKNOWN_UI_CHANGE, `Start frame did not take: the Start slot still shows a different image after ${tries} tries.`, last);
 }
 
 /**

@@ -113,6 +113,7 @@ export const TOOL_DEFINITIONS = [
         resolution: { type: 'string', description: '720p or 360p, where offered. Omit to keep the model setting.' },
         video_input: { type: 'string', description: '"Ingredients" (default) or "Frames".', default: 'Ingredients' },
         start_frame: { type: 'string', description: 'Image-to-video: media id or exact title of a still to use as the first frame (tile menu → Animate; sets Frames mode).' },
+        dry_run: { type: 'boolean', description: 'Set everything up (including Animate and the Start-slot check) but stop before Generate. No credits used.' },
         quantity: { type: 'number', description: 'Videos per run, 1–4.', default: 1 },
         download: { type: 'string', description: 'Optional: download each new video when done: "720p", "1080p" (upscaled) or "270p" (GIF). Omit to skip.' },
         reference_media: { type: 'array', items: { type: 'string' }, description: 'Project items to attach as references via their tile menu ("Add to prompt"): media ids from earlier results, or exact tile titles. Safer than ingredients when titles repeat.' },
