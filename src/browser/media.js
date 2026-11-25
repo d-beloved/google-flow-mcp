@@ -111,14 +111,36 @@ export async function waitForNewMedia(page, before, { count = 1, timeoutMs = 180
   const excluded = new Set(exclude || []);
   const isOld = m => beforeKeys.has(stableKey(m)) || excluded.has(m.id)
     || (stableKey(m) !== m.id && unstableTitles.has(`${m.type}|${m.title}`));
+  // Nov 2026: video tiles now carry signed (unstable) thumbnail URLs, so their key is
+  // "video|<title>". A new clip whose title repeats an older one ("Old man watching
+  // flame") then looks old and the wait times out. Count keys: if a key now appears
+  // more often than before, its topmost extra copies are new.
+  const beforeCount = new Map();
+  for (const b of before || []) { if (typeof b === 'string') continue; const k = stableKey(b); beforeCount.set(k, (beforeCount.get(k) || 0) + 1); }
+  const extraByCount = (media) => {
+    const now = new Map();
+    for (const m of media) { const k = stableKey(m); now.set(k, (now.get(k) || 0) + 1); }
+    const out = [];
+    const taken = new Map();
+    for (const m of media) {
+      const k = stableKey(m);
+      const extra = (now.get(k) || 0) - (beforeCount.get(k) || 0);
+      if (extra > 0 && (taken.get(k) || 0) < extra && !excluded.has(m.id)) { out.push(m); taken.set(k, (taken.get(k) || 0) + 1); }
+    }
+    return out;
+  };
   const start = Date.now();
   let lastLog = 0;
   while (Date.now() - start < timeoutMs) {
     await scrollGridToTop(page);
     const media = await listMedia(page).catch(() => []);
     const firstOld = media.findIndex(isOld);
-    const fresh = (firstOld === -1 ? (beforeKeys.size ? [] : media) : media.slice(0, firstOld))
+    let fresh = (firstOld === -1 ? (beforeKeys.size ? [] : media) : media.slice(0, firstOld))
       .filter(m => (!type || m.type === type) && !isOld(m));
+    if (!fresh.length) {
+      const byCount = extraByCount(media).filter(m => !type || m.type === type);
+      if (byCount.length) fresh = byCount;
+    }
     const ready = fresh.filter(m => m.ready);
     if (ready.length >= count) return ready.slice(0, count);
     // Flow shows a "Failed — Failed to load image" tile when a generation fails.
